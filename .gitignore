@@ -1,0 +1,3 @@
+# ISO build artefacts: the work tree, the VM disks, and the ISO itself.
+manuserver_bootable_iso/build/
+manuserver_bootable_iso/out/
