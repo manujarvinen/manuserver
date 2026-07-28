@@ -85,6 +85,14 @@ Postgres, PHP and nginx come later, via `provision.sh`.
 
 ```
 manuserver_bootable_iso/   ISO build scripts + the TUI installer
+public_html/               the site this server serves — the actual project
+server/deploy/             provision.sh, run on the machine after install
+manuserver-website/        a promo page for this repo, hosted elsewhere
 references/                design references — logo, colours, screen layouts
 work-files/                source files for the visuals (Krita)
 ```
+
+Two websites, which is confusing until you see the split:
+`manuserver-website/` describes the project and is uploaded wherever you like.
+`public_html/` is the thing running *on* the server, talking to the database —
+nginx will point at it from `/srv/manuserver/public_html`.

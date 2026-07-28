@@ -7,53 +7,154 @@
 <style>
   :root {
     --bg: #2E1522;
+    --panel: #3A1B2B;
     --logo: #8F0B45;
-    --body: #A81558;
-    --accent: #E81E80;
-    --dim: #7A1040;
+    --body: #C4738F;
+    --heading: #E81E80;
+    --code: #F2C8DC;
+    --dim: #8A4A63;
   }
   * { box-sizing: border-box; }
-  html, body { height: 100%; }
   body {
     margin: 0;
-    display: grid;
-    place-items: center;
-    padding: 2rem;
+    padding: 3rem 1.25rem 5rem;
     background: var(--bg);
     color: var(--body);
-    font: 1rem/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font: 1rem/1.7 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   }
-  main { max-width: 34rem; }
+  main { max-width: 38rem; margin: 0 auto; }
+
   h1 {
-    margin: 0 0 1.5rem;
+    margin: 0 0 2.5rem;
     color: var(--logo);
-    font-size: clamp(1.75rem, 9vw, 3.5rem);
-    font-weight: 700;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: clamp(2rem, 10vw, 3.5rem);
     letter-spacing: 0.12em;
+    line-height: 1.1;
   }
-  p { margin: 0 0 1.5rem; }
-  ul { margin: 0 0 1.5rem; padding: 0; list-style: none; }
-  li { margin: 0 0 0.25rem; }
-  li::before { content: "> "; color: var(--accent); }
-  .dim { color: var(--dim); font-size: 0.875rem; margin: 0; }
-  a { color: inherit; }
+  h2 {
+    margin: 2.5rem 0 1rem;
+    color: var(--heading);
+    font-size: 1rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  p { margin: 0 0 1rem; }
+  ol { margin: 0; padding-left: 1.25rem; }
+  ol > li { margin-bottom: 1.75rem; }
+
+  /* Commands you type. Monospace, and scrollable rather than wrapped, so a
+     long command is never silently broken across lines. */
+  pre {
+    margin: 0.75rem 0 0;
+    padding: 0.85rem 1rem;
+    overflow-x: auto;
+    background: var(--panel);
+    border-left: 3px solid var(--heading);
+    color: var(--code);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.9375rem;
+    line-height: 1.6;
+  }
+  code {
+    color: var(--code);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.9375em;
+  }
+  strong { color: var(--heading); font-weight: 700; }
+  .note { color: var(--dim); font-size: 0.9375rem; }
+  footer { margin-top: 3.5rem; color: var(--dim); font-size: 0.9375rem; }
+  a { color: var(--heading); }
 </style>
 </head>
 <body>
-  <main>
-    <h1>MANUSERVER</h1>
+<main>
 
-    <p>A small Arch Linux server that can rebuild itself from scratch.</p>
+  <h1>MANUSERVER</h1>
 
-    <ul>
-      <li>builds its own install disk</li>
-      <li>installs itself, asking four questions</li>
-      <li>runs in a virtual machine or on real hardware</li>
-      <li>starts with the machine — no login, no setup</li>
-      <li>database backup and restore in one command</li>
-    </ul>
+  <h2>What it is</h2>
+  <p>
+    A server — in a virtual machine, or on a real computer as a home server —
+    for serving a website with a Postgres database.
+  </p>
+  <p class="note">
+    Work in progress: today it installs the machine itself. The website and
+    database are what comes next, and they arrive without rebuilding the
+    <code>.iso</code>.
+  </p>
 
-    <p class="dim">nothing is running here yet.</p>
-  </main>
+  <h2>How to use</h2>
+  <p class="note">
+    You need a computer running Arch Linux to build the <code>.iso</code>, with
+    about 15 GB of free space. Nothing else has to be installed first — the
+    build script installs what it needs.
+  </p>
+  <ol>
+    <li>
+      Make the bootable <code>.iso</code> file, a minimal custom Arch Linux
+      server, by running the script that comes with it. Takes around 20
+      minutes.
+<pre>git clone https://github.com/manujarvinen/manuserver.git
+cd manuserver/manuserver_bootable_iso
+./build_manuserver_iso.sh</pre>
+      <p class="note">
+        If it says it added you to the <code>kvm</code> group, log out and back
+        in before the next step. Otherwise the virtual machine runs without
+        hardware acceleration, and the install takes an hour instead of a few
+        minutes.
+      </p>
+    </li>
+    <li>
+      With the <code>.iso</code> file, install the server. It has no graphical
+      interface — terminal only.
+      <p>
+        The following line, run from your local Arch Linux, will install a
+        fresh virtual machine and the manuserver into it.
+      </p>
+<pre>./run-manuserver-in-vm.sh install</pre>
+      <p class="note">
+        Or write the <code>.iso</code> to a USB stick and install it onto a
+        real computer.
+      </p>
+    </li>
+    <li>
+      The installer asks only four things — network, username, password, and
+      which disk to use — and sets up everything else on its own.
+      <strong>It wipes the whole disk.</strong>
+    </li>
+    <li>
+      When it says the install is finished, close the virtual machine window.
+      Then start the server:
+<pre>./run-manuserver-in-vm.sh</pre>
+      <p class="note">
+        Use the same username you gave the installer when you connect to it
+        later.
+      </p>
+    </li>
+  </ol>
+
+  <h2>Running it</h2>
+  <p>
+    The cloned GitHub repository paradoxically includes the making of the
+    server that clones the exact same repository onto itself — which, for now,
+    is what sets the server up. It is a multi-purpose repository.
+  </p>
+<pre>./run-manuserver-in-vm.sh             start it
+./run-manuserver-in-vm.sh stop        shut it down
+./run-manuserver-in-vm.sh status      is it running?
+./run-manuserver-in-vm.sh ssh mj      open a terminal on it
+./run-manuserver-in-vm.sh backup mj   save the database to a file</pre>
+  <p class="note">
+    Replace <code>mj</code> with the username you gave the installer. Leave it
+    out and it uses your own computer's username, which is only right if the
+    two match.
+  </p>
+
+  <footer>
+    Source and full instructions:
+    <a href="https://github.com/manujarvinen/manuserver">github.com/manujarvinen/manuserver</a>
+  </footer>
+
+</main>
 </body>
 </html>

@@ -8,6 +8,11 @@
 # (Postgres, PHP, nginx) when that exists — the ISO does not need rebuilding
 # for that, which is the whole point of this hook.
 #
+# When nginx goes in here, its document root should point at
+# /srv/manuserver/public_html — that is the site this server serves. The other
+# folder, manuserver-website/, is a promo page hosted elsewhere and has no
+# business on this machine.
+#
 # Two rules for whatever replaces this:
 #
 #   1. There is no running init inside arch-chroot. `systemctl enable` works,
