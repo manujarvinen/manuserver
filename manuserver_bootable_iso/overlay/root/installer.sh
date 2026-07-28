@@ -138,6 +138,7 @@ finish_screen() {
   ui_line "$S_ACCENT" "  ssh       enabled on first boot"
   ui_blank
   ui_body "Remove the install medium before the machine comes back up."
+  ui_body "In a virtual machine the window closes on its own."
   ui_blank
   ui_hint "enter reboot"
   read -r _ 2>/dev/null || true

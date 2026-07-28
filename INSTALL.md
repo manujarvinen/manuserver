@@ -53,8 +53,9 @@ A window opens and the installer starts by itself. It asks you four things:
    for you. It then asks you to confirm that it may erase it. Use the arrow
    keys to choose **Yes, format disk**, then press enter.
 
-Then it installs. This takes a few minutes. When it finishes, press enter and
-the machine restarts.
+Then it installs. This takes a few minutes. When it finishes, press enter. The
+virtual machine window closes on its own — that is normal, and it is how the
+install disk gets out of the way.
 
 At the end you are asked whether to delete the ISO file. It is about 1 GB and
 you do not need it anymore, unless you want to install again later or put it on

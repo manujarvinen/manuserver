@@ -193,12 +193,19 @@ cmd_install() {
   say "booting $(basename "$iso") — the installer starts on its own"
   local -a args=()
   mapfile -t args < <(base_args)
+
+  # -no-reboot is what keeps this from looping. The ISO is still in the virtual
+  # drive when the installer reboots at the end, and the firmware would boot it
+  # again and run the installer a second time. Exiting on the reboot ends the
+  # install session instead, and every later start runs without the ISO
+  # attached at all.
   qemu-system-x86_64 "${args[@]}" \
     -display gtk \
     -drive "media=cdrom,readonly=on,file=$iso" \
-    -boot "order=d,menu=on"
+    -boot "order=d,menu=on" \
+    -no-reboot
 
-  say "installer VM exited. start the installed server with: $0"
+  say "install finished. start the server with: $0"
   offer_iso_cleanup "$iso"
 }
 
