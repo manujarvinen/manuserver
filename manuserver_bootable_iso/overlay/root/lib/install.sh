@@ -93,8 +93,6 @@ Name=wl*
 DHCP=yes
 EOF
 
-ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
-
 systemctl enable systemd-networkd systemd-resolved iwd sshd
 
 useradd -m -G wheel -s /bin/bash "$username"
@@ -112,6 +110,15 @@ ExecStart=
 ExecStart=-/usr/bin/agetty --autologin ${username} --noclear %I \$TERM
 EOF
 CHROOT
+
+  # This one cannot be done inside the chroot. arch-chroot bind-mounts the
+  # host's /etc/resolv.conf over the target's for the duration, so `ln` in
+  # there is asked to point a file at itself and fails -- which, under
+  # `set -e`, took the whole configuration step down with it. Out here the
+  # bind mount is gone and /mnt/etc/resolv.conf is the target's own file.
+  ui_step "pointing resolv.conf at systemd-resolved"
+  ln -sfn /run/systemd/resolve/stub-resolv.conf /mnt/etc/resolv.conf 2>>"$UI_LOG" ||
+    ui_fatal_log "pointing resolv.conf at systemd-resolved"
 }
 
 install_bootloader() {

@@ -54,6 +54,7 @@ UI_RESULT=''
 # --- lifecycle -------------------------------------------------------------
 
 ui_init() {
+  ui_quiet_kernel
   ui_palette_init
   ui_font_check
   tput civis 2>/dev/null || true
@@ -65,10 +66,31 @@ ui_init() {
 # Undo everything ui_init changed. Registered as an EXIT trap by the caller so
 # that a crash never leaves the console pink and cursorless.
 ui_cleanup() {
+  ui_restore_kernel
   printf '\e]R'                      # restore the default palette
   printf '%s' "$S_RESET"
   stty echo 2>/dev/null || true
   tput cnorm 2>/dev/null || true
+}
+
+# The kernel writes straight to the console, on top of whatever is drawn
+# there. Formatting a disk is enough to trigger it -- ext4 probing alone prints
+# a line mid-install -- and the result is a screen with kernel noise stamped
+# through the middle of it. Messages still go to dmesg and to the install log;
+# they just stop painting over the UI.
+UI_PRINTK_SAVED=''
+
+ui_quiet_kernel() {
+  [[ -w /proc/sys/kernel/printk ]] || return 0
+  UI_PRINTK_SAVED=$(cut -f1 /proc/sys/kernel/printk 2>/dev/null || true)
+  printf '1\n' >/proc/sys/kernel/printk 2>/dev/null || true
+  return 0
+}
+
+ui_restore_kernel() {
+  [[ -n $UI_PRINTK_SAVED && -w /proc/sys/kernel/printk ]] || return 0
+  printf '%s\n' "$UI_PRINTK_SAVED" >/proc/sys/kernel/printk 2>/dev/null || true
+  return 0
 }
 
 ui_palette_init() {
