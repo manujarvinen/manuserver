@@ -327,7 +327,9 @@ ui_pause() {
 # "backspace", "reveal" (Ctrl-R), "esc".
 ui_key() {
   local c rest
-  IFS= read -rsn1 c 2>/dev/null || { printf '\n'; return 0; }
+  # End of input is its own answer, never a stand-in for enter. Treating it as
+  # enter meant a closed stdin could confirm a disk wipe on its own.
+  IFS= read -rsn1 c 2>/dev/null || { printf 'eof\n'; return 0; }
   case $c in
     '')      printf '\n' ;;                       # enter
     $'\177'|$'\b') printf 'backspace\n' ;;
@@ -395,6 +397,10 @@ ui_input() {
       backspace)   value=${value%?} ;;
       reveal)      ((mask)) && reveal=$((1 - reveal)) ;;
       left|right|up|down|esc) ;;
+      # Nothing left to read. On a console this cannot happen; if it somehow
+      # does, stop with a message rather than spinning on a dead stream.
+      eof)         ui_fatal "The installer lost its keyboard input." \
+                            "Rerun it with: bash /root/installer.sh" ;;
       *)           value+=$key ;;
     esac
   done
@@ -427,14 +433,18 @@ ui_menu() {
 
 # ui_confirm <yes-label> <no-label> — two toggle buttons, styled after
 # references/ref_wipe_disk.png. Defaults to No; returns 0 for yes, 1 for no.
+#
+# y and n move the selection, they do not submit. The only thing this is used
+# for is erasing a disk, and a single mistyped key should never be enough to
+# do that -- confirming always takes two deliberate presses.
 ui_confirm() {
   local yes=$1 no=$2
   local sel=1   # 0 = yes, 1 = no
   local row=$UI_ROW key
 
   ui_at $((row + 2)) "$UI_PAD"
-  printf '%s%s toggle %s enter submit %s y %s %s n %s%s' \
-    "$S_HINT" "$UI_G_TOGGLE" "$UI_G_SEP" "$UI_G_SEP" "$yes" "$UI_G_SEP" "$no" "$S_RESET"
+  printf '%s%s toggle %s y/n select %s enter confirm%s' \
+    "$S_HINT" "$UI_G_TOGGLE" "$UI_G_SEP" "$UI_G_SEP" "$S_RESET"
 
   while :; do
     ui_at "$row" "$UI_PAD"
@@ -448,8 +458,9 @@ ui_confirm() {
     key=$(ui_key)
     case $key in
       left|right) sel=$((1 - sel)) ;;
-      y|Y) sel=0; break ;;
-      n|N) sel=1; break ;;
+      y|Y) sel=0 ;;
+      n|N) sel=1 ;;
+      eof) sel=1; break ;;   # no input left: answer no, never yes
       '')  break ;;
     esac
   done

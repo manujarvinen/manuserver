@@ -81,6 +81,10 @@ disk_confirm() {
   ui_body "Everything will be overwritten. There is no recovery possible."
   ui_blank
   ui_line "$S_ACCENT" "Confirm overwriting $DISK"
+  # Spell out which disk this actually is. On a machine with more than one, the
+  # device name alone is not enough to tell them apart, and this is the last
+  # screen before the data is gone.
+  ui_line "$S_BODY" "  $(disk_describe "$DISK")"
   ui_blank
   if ui_confirm "Yes, format disk" "No, change it"; then
     return 0
