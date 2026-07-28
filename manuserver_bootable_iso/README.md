@@ -95,7 +95,7 @@ Then it partitions (1 GB ESP + root), pacstraps, configures, installs
 systemd-boot, creates the account, locks root, and clones this repo to
 `/srv/manuserver` on the target.
 
-Fixed without asking: keymap `us`, hostname `manu-server`, timezone `UTC`,
+Fixed without asking: keymap `us`, hostname `manuserver`, timezone `UTC`,
 locale `en_US.UTF-8`, UEFI + systemd-boot, `systemd-networkd` + `iwd`.
 
 ### Autologin

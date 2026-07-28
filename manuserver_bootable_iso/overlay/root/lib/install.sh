@@ -15,7 +15,7 @@
 readonly FIRMWARE_PKG='linux-firmware'
 readonly BASE_PACKAGES=(base linux "$FIRMWARE_PKG" sudo iwd iw openssh git)
 
-readonly TARGET_HOSTNAME='manu-server'
+readonly TARGET_HOSTNAME='manuserver'
 readonly TARGET_LOCALE='en_US.UTF-8'
 readonly TARGET_KEYMAP='us'
 readonly TARGET_TIMEZONE='UTC'
