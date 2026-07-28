@@ -93,7 +93,9 @@
 
   <p class="requirement">
     You need Arch Linux to build this <code>.iso</code> file — in your
-    computer, or in a virtual machine.
+    computer, or in a virtual machine. Building an <code>.iso</code> requires
+    quite a few packages to be installed. You may want to do this in a virtual
+    machine if you want to keep your Arch install minimal.
   </p>
 
   <h2>How to use</h2>
@@ -104,8 +106,8 @@
   <ol>
     <li>
       Make the bootable <code>.iso</code> file, a minimal custom Arch Linux
-      server, by running the script that comes with it. Takes around 20
-      minutes.
+      server, by running the script that comes with it. Usually 5–20 minutes,
+      depending on your machine and connection.
 <pre>git clone https://github.com/manujarvinen/manuserver.git
 cd manuserver/manuserver_bootable_iso
 ./build_manuserver_iso.sh</pre>
@@ -120,8 +122,8 @@ cd manuserver/manuserver_bootable_iso
       With the <code>.iso</code> file, install the server. It has no graphical
       interface — terminal only.
       <p>
-        The following line, run from your local Arch Linux, will install a
-        fresh virtual machine and the manuserver into it.
+        The following line, run from your local Arch Linux, will create a
+        fresh virtual machine and install manuserver into it.
       </p>
 <pre>./run-manuserver-in-vm.sh install</pre>
       <p class="note">
