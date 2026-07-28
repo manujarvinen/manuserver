@@ -8,6 +8,8 @@
 #   ./run-manuserver-in-vm.sh stop       ask it to shut down cleanly
 #   ./run-manuserver-in-vm.sh status     is it up, and on which ports
 #   ./run-manuserver-in-vm.sh ssh [user] open a shell on it
+#   ./run-manuserver-in-vm.sh backup     save the database to backups/
+#   ./run-manuserver-in-vm.sh restore    put a saved database back
 #   ./run-manuserver-in-vm.sh console    boot it in a window, to watch it boot
 #
 # Starting and stopping the VM *is* starting and stopping the server: the
@@ -30,6 +32,7 @@ readonly MONITOR="$VM/monitor.sock"
 readonly DISK_SIZE=20G
 readonly SSH_PORT=2222
 readonly HTTP_PORT=8080
+readonly BACKUPS="$HERE/backups"
 
 die() { printf 'run-manuserver-in-vm.sh: %s\n' "$*" >&2; exit 1; }
 say() { printf '==> %s\n' "$*"; }
@@ -141,12 +144,43 @@ newest_iso() {
 
 # --- verbs -----------------------------------------------------------------
 
+# Installing erases the VM's disk. That is harmless the first time and
+# destructive every time after, because the database lives on that disk and
+# this is the only copy of it. So: never wipe an existing machine without
+# being told to, twice.
+confirm_wipe() {
+  local reply size
+  size=$(du -h "$DISK" 2>/dev/null | cut -f1)
+
+  printf '\n'
+  printf 'There is already a manuserver installed in this VM (%s).\n' "${size:-unknown size}"
+  printf 'Installing again ERASES it, including the database and anything\n'
+  printf 'else on it. There is no undo.\n\n'
+
+  if [[ ! -t 0 ]]; then
+    die "refusing to erase it without a confirmation. Use: $0 install --wipe"
+  fi
+
+  read -rp "Type ERASE to confirm, anything else to cancel: " reply
+  [[ $reply == ERASE ]] || die "cancelled — nothing was touched"
+}
+
 cmd_install() {
-  local iso
+  local iso wipe=0
+
+  # `--wipe` is for when you already know, and for scripts. It skips the
+  # question, nothing else.
+  [[ ${1:-} == --wipe || ${1:-} == -f ]] && wipe=1
+
   iso=$(newest_iso)
   [[ -n $iso ]] || die "no ISO in $OUT — run: ./build_manuserver_iso.sh"
 
   ! vm_running || die "the VM is running — stop it first: $0 stop"
+
+  if [[ -f $DISK ]] && ((!wipe)); then
+    confirm_wipe
+  fi
+
   ensure_vm
 
   # A fresh disk every time. A half-finished install left lying around is a
@@ -256,16 +290,118 @@ cmd_status() {
   fi
 }
 
+# A rebuilt VM reuses the port with a different host key, which otherwise trips
+# the known_hosts warning every single time.
+ssh_opts() {
+  printf '%s\n' \
+    -p "$SSH_PORT" \
+    -o StrictHostKeyChecking=no \
+    -o UserKnownHostsFile=/dev/null \
+    -o LogLevel=ERROR
+}
+
 cmd_ssh() {
   vm_running || die "not running — start it with: $0"
   local user=${1:-$USER}
-  # A rebuilt VM reuses the port with a different host key, which otherwise
-  # trips the known_hosts warning every single time.
-  exec ssh -p "$SSH_PORT" \
-    -o StrictHostKeyChecking=no \
-    -o UserKnownHostsFile=/dev/null \
-    -o LogLevel=ERROR \
-    "$user@localhost"
+  local -a opts=()
+  mapfile -t opts < <(ssh_opts)
+  exec ssh "${opts[@]}" "$user@localhost"
+}
+
+# vm_run <tty|notty> <user> <command...>
+#
+# `tty` allocates a terminal, which sudo needs in order to ask for a password.
+# Anything whose output we capture must use `notty`, because a terminal turns
+# every newline into CRLF and would quietly corrupt a database dump.
+vm_run() {
+  local mode=$1 user=$2; shift 2
+  local -a opts=()
+  mapfile -t opts < <(ssh_opts)
+  [[ $mode == tty ]] && opts+=(-t)
+  # shellcheck disable=SC2029  # paths are meant to expand here; anything that
+  # must run on the server is escaped by the caller
+  ssh "${opts[@]}" "$user@localhost" "$@"
+}
+
+# --- backup and restore ----------------------------------------------------
+#
+# The database lives inside the VM, on a single disk image. These two verbs
+# exist so that is not the only copy of it.
+
+readonly REMOTE_TMP=/tmp/manuserver-db.sql
+
+require_postgres() {
+  local user=$1
+  vm_run notty "$user" 'command -v pg_dumpall >/dev/null 2>&1' ||
+    die "Postgres is not installed on the server yet.
+     That happens in server/deploy/provision.sh, which is still a placeholder."
+}
+
+newest_backup() {
+  { find "$BACKUPS" -maxdepth 1 -name '*.sql' -printf '%T@ %p\n' 2>/dev/null || true; } |
+    sort -rn | head -n1 | cut -d' ' -f2-
+}
+
+cmd_backup() {
+  local user=${1:-$USER} stamp file
+
+  vm_running || die "not running — start it with: $0"
+  require_postgres "$user"
+
+  install -d "$BACKUPS"
+  stamp=$(date +%Y-%m-%d-%H%M)
+  file="$BACKUPS/manuserver-$stamp.sql"
+
+  # Dump on the server first, then fetch it. Doing both in one step would mean
+  # capturing output from a terminal session, which mangles the file.
+  say "asking the server for a copy of the database"
+  vm_run tty "$user" \
+    "sudo -u postgres pg_dumpall --clean > $REMOTE_TMP && sudo chown \$(id -un) $REMOTE_TMP" ||
+    die "the server could not make a copy — see the message above"
+
+  vm_run notty "$user" "cat $REMOTE_TMP" >"$file" || {
+    rm -f "$file"
+    die "could not fetch the copy from the server"
+  }
+  vm_run notty "$user" "rm -f $REMOTE_TMP" || true
+
+  [[ -s $file ]] || { rm -f "$file"; die "the copy came back empty — nothing saved"; }
+
+  say "saved $file ($(du -h "$file" | cut -f1))"
+}
+
+cmd_restore() {
+  local file=${1:-} user=${2:-$USER} reply
+
+  vm_running || die "not running — start it with: $0"
+
+  if [[ -z $file ]]; then
+    file=$(newest_backup)
+    [[ -n $file ]] || die "no backups in $BACKUPS — make one with: $0 backup"
+    say "using the newest backup: $(basename "$file")"
+  fi
+  [[ -r $file ]] || die "cannot read $file"
+
+  require_postgres "$user"
+
+  # Restoring replaces what is on the server. Same rule as installing: ask
+  # first, and default to not doing it.
+  printf '\n'
+  printf 'This REPLACES the database on the server with:\n  %s\n' "$file"
+  printf 'Anything currently in it is lost.\n\n'
+  [[ -t 0 ]] || die "refusing to restore without a confirmation"
+  read -rp "Continue? [y/N] " reply
+  case ${reply,,} in y|yes) ;; *) die "cancelled — the server was not touched" ;; esac
+
+  say "sending the backup to the server"
+  vm_run notty "$user" "cat > $REMOTE_TMP" <"$file" || die "could not send the file"
+
+  say "restoring"
+  vm_run tty "$user" "sudo -u postgres psql -q -f $REMOTE_TMP" ||
+    die "the restore reported a problem — see the message above"
+  vm_run notty "$user" "rm -f $REMOTE_TMP" || true
+
+  say "restored from $(basename "$file")"
 }
 
 cmd_console() {
@@ -279,11 +415,13 @@ cmd_console() {
 }
 
 case "${1:-start}" in
-  install) cmd_install ;;
+  install) shift; cmd_install "$@" ;;
   start|up) cmd_start ;;
   stop|down) cmd_stop ;;
   status) cmd_status ;;
   ssh) shift; cmd_ssh "$@" ;;
+  backup) shift; cmd_backup "$@" ;;
+  restore) shift; cmd_restore "$@" ;;
   console) cmd_console ;;
   -h|--help|help)
     # The header comment is the help text; print it up to the first line that

@@ -38,7 +38,11 @@ After that the VM is the server, and runs like one:
 ./run-manuserver-in-vm.sh stop       # shut it down cleanly
 ./run-manuserver-in-vm.sh status     # check on it
 ./run-manuserver-in-vm.sh ssh mj     # shell on it, or http://localhost:8080
+./run-manuserver-in-vm.sh backup     # database -> backups/, restore puts it back
 ```
+
+`install` erases the VM and everything on it, so it asks you to type `ERASE`
+first. Take a backup before you do.
 
 It autologins on the console and starts its services at boot, so there is no
 login step between powering it on and the server being up. Details, including

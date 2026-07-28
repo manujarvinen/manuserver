@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>manuserver</title>
+<style>
+  :root {
+    --bg: #2E1522;
+    --logo: #8F0B45;
+    --body: #A81558;
+    --accent: #E81E80;
+    --dim: #7A1040;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    display: grid;
+    place-items: center;
+    padding: 2rem;
+    background: var(--bg);
+    color: var(--body);
+    font: 1rem/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  main { max-width: 34rem; }
+  h1 {
+    margin: 0 0 1.5rem;
+    color: var(--logo);
+    font-size: clamp(1.75rem, 9vw, 3.5rem);
+    font-weight: 700;
+    letter-spacing: 0.12em;
+  }
+  p { margin: 0 0 1.5rem; }
+  ul { margin: 0 0 1.5rem; padding: 0; list-style: none; }
+  li { margin: 0 0 0.25rem; }
+  li::before { content: "> "; color: var(--accent); }
+  .dim { color: var(--dim); font-size: 0.875rem; margin: 0; }
+  a { color: inherit; }
+</style>
+</head>
+<body>
+  <main>
+    <h1>MANUSERVER</h1>
+
+    <p>A small Arch Linux server that can rebuild itself from scratch.</p>
+
+    <ul>
+      <li>builds its own install disk</li>
+      <li>installs itself, asking four questions</li>
+      <li>runs in a virtual machine or on real hardware</li>
+      <li>starts with the machine — no login, no setup</li>
+      <li>database backup and restore in one command</li>
+    </ul>
+
+    <p class="dim">nothing is running here yet.</p>
+  </main>
+</body>
+</html>
