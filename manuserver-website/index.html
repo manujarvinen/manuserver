@@ -193,8 +193,14 @@ cd manuserver/manuserver_bootable_iso
   </p>
   <p>
     The virtual machine is not tied to the terminal you started it from. You
-    can close that terminal, or even log out, and it keeps going. Any terminal
-    can check on it with <code>status</code>.
+    can close that terminal, or even log out, and it keeps going. Any other
+    terminal of yours can check on it with <code>status</code> — including one
+    opened over <code>ssh</code>.
+  </p>
+  <p class="note">
+    Of yours meaning logged in as the same user. Someone else using the same
+    computer cannot see or control it, and <code>status</code> would tell them
+    it is not running.
   </p>
   <p>What does stop it:</p>
   <ul>
