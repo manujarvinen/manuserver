@@ -186,6 +186,33 @@ cd manuserver/manuserver_bootable_iso
     password of your own computer.
   </p>
 
+  <h2>Leaving it running</h2>
+  <p>
+    Locking your computer is fine — that only blanks the screen. The server
+    keeps running, and so does everything connected to it.
+  </p>
+  <p>
+    The virtual machine is not tied to the terminal you started it from. You
+    can close that terminal, or even log out, and it keeps going. Any terminal
+    can check on it with <code>status</code>.
+  </p>
+  <p>What does stop it:</p>
+  <ul>
+    <li>your computer going to sleep, suspending or hibernating</li>
+    <li>shutting down or restarting your computer</li>
+    <li><code>./run-manuserver-in-vm.sh stop</code></li>
+  </ul>
+  <p class="note">
+    Most desktops lock the screen and then suspend a few minutes later. If you
+    want the server reachable while you are away, turn automatic suspend off.
+    After a shutdown it does not come back on its own — start it again.
+  </p>
+  <p>
+    manuserver itself never sleeps. It has no desktop and nothing set to power
+    down when idle. If you watch it in a window the screen may go blank after
+    ten minutes or so; that is only the display, and a keypress brings it back.
+  </p>
+
   <footer>
     Source and full instructions:
     <a href="https://github.com/manujarvinen/manuserver">github.com/manujarvinen/manuserver</a>
