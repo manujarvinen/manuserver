@@ -81,22 +81,78 @@ ui_palette_init() {
   printf '\e[2J\e[H'   # repaint so slot 0 becomes the visible background
 }
 
-# Glyphs used in the chrome. The block elements in the logo are CP437 and
-# safe anywhere, but ▸ ↔ • are not in every console font, and a missing glyph
-# renders as a blank or a tofu box in the middle of the hint line.
-UI_G_STEP='▸'
-UI_G_SEP='•'
-UI_G_TOGGLE='↔'
+# Glyphs used in the chrome. Nothing here is assumed: a console font that
+# lacks a glyph draws a blank or a tofu box in the middle of a word, and the
+# logo is made of glyphs too, so guessing wrong wrecks the whole screen.
+#
+# ▸ (U+25B8) is in none of the stock console fonts, so the step marker is
+# plain ASCII and stays that way.
+UI_G_STEP='>'
+UI_G_SEP='-'
+UI_G_TOGGLE='<->'
+UI_BLOCKS_OK=1        # can the console draw the logo's ▀ ▄ █ ?
 
-# The console cannot be asked which glyphs it has, so switch to a font that
-# certainly carries them (Terminus, put on the medium by the ISO build). If that
-# fails, degrade the glyphs to ASCII rather than gambling on the default font.
+readonly UI_FONTDIR=/usr/share/kbd/consolefonts
+
+# Path of the console font in use, if it can be worked out. Failing means the
+# kernel's built-in font is active, which is default8x16 and does carry the
+# block elements.
+ui_font_file() {
+  local name='' f
+  [[ -r /etc/vconsole.conf ]] &&
+    name=$(sed -n 's/^[[:space:]]*FONT=//p' /etc/vconsole.conf | tr -d '"' | head -n1)
+  [[ -n $name ]] || return 1
+
+  for f in "$UI_FONTDIR/$name".psfu.gz "$UI_FONTDIR/$name".psf.gz \
+           "$UI_FONTDIR/$name".psfu "$UI_FONTDIR/$name".psf; do
+    if [[ -r $f ]]; then printf '%s' "$f"; return 0; fi
+  done
+  return 1
+}
+
+# A font file's own unicode table. This is the only honest way to find out
+# what the console can draw -- the driver offers no way to ask.
+ui_font_table() { zcat -f "$1" 2>/dev/null | psfgettable - 2>/dev/null; }
+
+ui_font_has() {
+  local table=$1 cp
+  shift
+  for cp in "$@"; do
+    grep -qi "U+$cp" <<<"$table" || return 1
+  done
+  return 0
+}
+
 ui_font_check() {
-  if ! setfont ter-116n 2>/dev/null; then
-    UI_G_STEP='>'
-    UI_G_SEP='-'
-    UI_G_TOGGLE='<->'
+  local table='' file cand ctable
+
+  # No way to check: keep the ASCII chrome, and trust the blocks, since every
+  # stock font carries them -- including the kernel's built-in one.
+  command -v psfgettable >/dev/null || return 0
+
+  if file=$(ui_font_file); then
+    table=$(ui_font_table "$file")
+  else
+    table=$(ui_font_table "$UI_FONTDIR/default8x16.psfu.gz")
   fi
+
+  # If the active font cannot draw the logo, find one that can rather than
+  # painting a wall of tofu across the top of every screen.
+  if ! ui_font_has "$table" 2580 2584 2588; then
+    for cand in default8x16 eurlatgr lat9w-16 cp850-8x16; do
+      [[ -r $UI_FONTDIR/$cand.psfu.gz ]] || continue
+      ctable=$(ui_font_table "$UI_FONTDIR/$cand.psfu.gz")
+      if ui_font_has "$ctable" 2580 2584 2588 && setfont "$cand" 2>/dev/null; then
+        table=$ctable
+        break
+      fi
+    done
+  fi
+
+  if ! ui_font_has "$table" 2580 2584 2588; then UI_BLOCKS_OK=0; fi
+  if ui_font_has "$table" 2022; then UI_G_SEP='•'; fi
+  if ui_font_has "$table" 2194; then UI_G_TOGGLE='↔'; fi
+  return 0
 }
 
 ui_measure() {
@@ -130,11 +186,13 @@ ui_logo_load() {
 
   UI_LOGO_H=${#UI_LOGO_LINES[@]}
 
-  # Too narrow, or so short that the logo would crowd out the content below?
-  # Then the wordmark is rendered as plain text instead. Deliberate, not a
-  # degraded accident -- the default 80x25 VGA console is narrower than the
-  # art, so this is the ordinary path on real hardware.
+  # Too narrow, too short to leave room for the content below, or a console
+  # font that cannot draw block elements? Then the wordmark is rendered as
+  # plain text instead. Deliberate, not a degraded accident -- the default
+  # 80x25 VGA console is narrower than the art, so this is the ordinary path
+  # on real hardware.
   if ((UI_LOGO_H == 0)) ||
+     ((!UI_BLOCKS_OK)) ||
      ((UI_LOGO_W + 4 > UI_COLS)) ||
      ((UI_LOGO_H + 10 > UI_LINES)); then
     UI_LOGO_LINES=("MANUSERVER")

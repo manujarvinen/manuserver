@@ -94,7 +94,10 @@ install -m 644 "$LOGO" "$PROFILE/airootfs/root/manuserver_logo.txt"
 # releng that drops `iw` produces a broken wifi picker at install time rather
 # than here, where it is cheap to notice.
 say "adding the installer's own tools to the medium"
-for pkg in iwd iw curl gptfdisk dosfstools e2fsprogs arch-install-scripts git terminus-font; do
+# kbd matters more than it looks: the installer uses psfgettable to find out
+# which glyphs the console font actually has, and setfont to switch to one that
+# can draw the logo.
+for pkg in iwd iw curl gptfdisk dosfstools e2fsprogs arch-install-scripts git kbd; do
   grep -qxF "$pkg" "$PROFILE/packages.x86_64" || printf '%s\n' "$pkg" >>"$PROFILE/packages.x86_64"
 done
 
