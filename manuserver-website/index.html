@@ -62,6 +62,14 @@
     font-size: 0.9375em;
   }
   strong { color: var(--heading); font-weight: 700; }
+  /* The one prerequisite, stated before anything else is read. */
+  .requirement {
+    margin: 0 0 2.5rem;
+    padding: 0.85rem 1rem;
+    background: var(--panel);
+    border-left: 3px solid var(--heading);
+    color: var(--code);
+  }
   .note { color: var(--dim); font-size: 0.9375rem; }
   footer { margin-top: 3.5rem; color: var(--dim); font-size: 0.9375rem; }
   a { color: var(--heading); }
@@ -83,11 +91,15 @@
     <code>.iso</code>.
   </p>
 
+  <p class="requirement">
+    You need Arch Linux to build this <code>.iso</code> file — in your
+    computer, or in a virtual machine.
+  </p>
+
   <h2>How to use</h2>
   <p class="note">
-    You need a computer running Arch Linux to build the <code>.iso</code>, with
-    about 15 GB of free space. Nothing else has to be installed first — the
-    build script installs what it needs.
+    About 15 GB of free space is needed. Nothing else has to be installed
+    first — the build script installs what it needs.
   </p>
   <ol>
     <li>
