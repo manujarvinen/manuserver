@@ -27,7 +27,7 @@
   /* The title is the wordmark, not text. --logo is still the brand colour and
      manuserver.svg is filled with the same value by hand — an <img> cannot
      inherit a CSS variable, so the two are kept in step deliberately. */
-  h1 { margin: 0 0 2.5rem; }
+  h1 { margin: 0 0 1.1rem; }
   h1 img {
     display: block;
     width: 100%;
@@ -38,6 +38,16 @@
     color: var(--heading);
     font-size: 1rem;
     letter-spacing: 0.08em;
+  }
+
+  /* The subtitle — the only h2 that directly follows the wordmark. It reads as
+     a sentence rather than a section label, so it sits close under the title,
+     larger, and without the tracking that suits a short all-caps heading. */
+  h1 + h2 {
+    margin-top: 0;
+    font-size: clamp(1.125rem, 3.2vw, 1.5rem);
+    letter-spacing: 0;
+    line-height: 1.35;
   }
   p { margin: 0 0 1rem; }
 
