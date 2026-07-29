@@ -109,6 +109,25 @@ Design decisions that are load-bearing, not incidental:
   makes empty ones worthless rather than making accounts hard to create, so
   there is no bot detection to bypass. Enforced in SQL, not just in the routes.
 
+## The offline page
+
+`files/deploy/offline-worker.js` is a Cloudflare Worker, not part of the server.
+It sits on a route for the public hostname, passes everything through, and only
+answers itself when Cloudflare cannot reach the tunnel — because the machine is
+switched off, which for a home server is ordinary rather than an outage.
+
+It lives in the repo rather than in a dashboard text box for the same reason
+the nginx config lives in `provision.sh`: anything visitors see should be
+reviewable and in git. Deploying it is manual, and documented in INSTALL.md.
+
+It intercepts only 502, 504 and 520-530 — the codes that mean Cloudflare could
+not reach the origin. A 500 from PHP passes through untouched, because that
+means the server answered and the site is broken, which is a different thing
+and should look like one.
+
+The wordmark is inlined, copied from `files/promo/manuserver.svg`. If that file
+changes, this copy does not follow.
+
 ## Running it here
 
 ```sh

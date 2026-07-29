@@ -356,8 +356,38 @@ Afterwards `tunnel status` and `tunnel off` do what they say; `off` deletes the
 token and the site keeps running locally.
 
 - Only that one hostname and port are public. SSH stays unreachable.
-- The server has to be running, or visitors get a Cloudflare error page.
+- The server has to be running, or visitors get a Cloudflare error page — see
+  below for replacing that with something friendlier.
 - It survives reboots. `install` erases the token along with everything else.
+
+## A page for when the server is off
+
+With the server switched off, visitors get Cloudflare's **error 1033**: grey,
+branded, and worded as though the site is broken rather than resting. Custom
+error pages are a paid feature, but a Worker does the same job on the free plan
+and there is one ready in `files/deploy/offline-worker.js`.
+
+It passes every request straight through to your server, and only steps in when
+Cloudflare cannot reach it at all. Then it serves the manuserver wordmark and a
+short note saying the machine is off and nothing has been lost. The whole page
+is self-contained — no stylesheet, no font, no image — because it has to render
+on the one occasion your server cannot be asked for anything.
+
+1. In the Cloudflare dashboard go to **Workers & Pages → Create → Worker**.
+   Name it `tastehopping-offline` and deploy the starter.
+2. **Edit code**, replace all of it with the contents of
+   `files/deploy/offline-worker.js`, and deploy.
+3. On the Worker, go to **Settings → Domains & Routes → Add → Route** and add
+   `tastehopping.com/*`. Add `www.tastehopping.com/*` as a second route if you
+   published www as well.
+
+Test it by stopping the server — `manuserver vm_stop` — and loading the site.
+
+**This is code in front of a working system**, there to handle the times it is
+not working. A mistake in the Worker takes the site down even while the server
+is up, and Cloudflare lists overlapping Worker routes among the usual reasons a
+tunnel appears broken. If the site ever misbehaves in a way the server cannot
+explain, remove the route first and see if it goes away.
 
 ## Installing on a real computer instead of a virtual machine
 
