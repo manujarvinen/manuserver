@@ -144,10 +144,13 @@ manuserver backup mj     save the database to a file</pre>
   </p>
 
   <h2>Running it in 64-bit PC</h2>
+  <p>
+    <strong>Nothing to start. It logs itself in and brings its services up at
+    boot, so powering it on is the whole of it.</strong>
+  </p>
   <p class="note">
-    Nothing to start. It logs itself in and brings its services up at boot, so
-    powering it on is the whole of it. Its own screen shows the address it has
-    on your network — that is where the site is, and where to <code>ssh</code>.
+    Its own screen shows the address it has on your network — that is where the
+    site is, and where to <code>ssh</code>.
   </p>
 <pre>ssh mj@192.168.1.50            open a terminal on it
 sudo manuserver-tunnel         put it on the public internet
