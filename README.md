@@ -14,7 +14,7 @@ Step-by-step instructions in plain English are in [INSTALL.md](INSTALL.md).
 The short version:
 
 ```sh
-git clone git@github.com:manujarvinen/manuserver.git
+git clone https://github.com/manujarvinen/manuserver.git
 cd manuserver
 
 ./manuserver.sh build_iso     # -> ./manuserver-*.iso   (~20 min)

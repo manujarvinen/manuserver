@@ -15,7 +15,7 @@ needs.
 ## Step 1: Get the code
 
 ```sh
-git clone git@github-manujarvinen:manujarvinen/manuserver.git
+git clone https://github.com/manujarvinen/manuserver.git
 cd manuserver
 ```
 
