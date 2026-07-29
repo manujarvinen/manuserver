@@ -13,7 +13,7 @@ declare(strict_types=1);
   <p class="note">joining asks for nothing. press the button and you get a name and one long key.</p>
 
   <p class="note">the key <em>is</em> the account, shown only on the next screen. copy it somewhere
-  safe — only a hash is kept, so a lost key means a new name.</p>
+  safe. you lose the key, you lose the account — but you can always create a new account again.</p>
 
   <form method="post" action="/join" class="stack">
     <?= csrf_field() ?>
