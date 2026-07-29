@@ -50,6 +50,8 @@
     line-height: 1.35;
   }
   p { margin: 0 0 1rem; }
+  ol { margin: 0 0 1rem; padding-left: 1.4rem; }
+  ol > li { margin-bottom: 0.35rem; }
 
   /* Commands you type. Monospace, and scrollable rather than wrapped, so a
      long command is never silently broken across lines. */
@@ -171,8 +173,34 @@ sudo -u postgres pg_dumpall --clean &gt; backup.sql</pre>
   <h2>On the internet</h2>
   <p>
     A Cloudflare tunnel publishes it without opening anything on your router.
-    Already installed, and off until you give it a token —
-    <code>manuserver tunnel</code> asks for one.
+    Already installed, and off until you give it a token.
+  </p>
+  <p class="note">Getting one is free, in a browser, once:</p>
+  <ol class="note">
+    <li>
+      Sign up at <a href="https://dash.cloudflare.com/sign-up">cloudflare.com</a>,
+      <strong>Add a site</strong>, enter your domain, choose the free plan.
+    </li>
+    <li>
+      Point your registrar at the two nameservers it gives you, and wait for
+      <strong>Active</strong> — minutes to a day, and the only slow part.
+    </li>
+    <li>
+      <strong>Zero Trust → Networks → Tunnels → Create a tunnel</strong>,
+      choose <em>Cloudflared</em>, name it, save.
+    </li>
+    <li>
+      Copy the long <code>eyJhIjoi…</code> string it shows. That is the token —
+      treat it like a password.
+    </li>
+    <li>
+      On the same tunnel add a <strong>Public Hostname</strong>: your domain,
+      type <code>HTTP</code>, URL <code>localhost:80</code>.
+    </li>
+  </ol>
+  <p class="note">
+    Then <code>manuserver tunnel</code> — or <code>sudo manuserver-tunnel</code>
+    on a PC — asks for the token, and you are live.
   </p>
 
   <h2>Security</h2>
