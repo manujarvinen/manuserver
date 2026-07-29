@@ -81,6 +81,7 @@ Run these from the `manuserver_bootable_iso` folder:
 | Stop the server | `./run-manuserver-in-vm.sh stop` |
 | Check if it is running | `./run-manuserver-in-vm.sh status` |
 | Open a terminal on it | `./run-manuserver-in-vm.sh ssh yourname` |
+| Put it on the internet | `./run-manuserver-in-vm.sh tunnel` |
 | Save a copy of the database | `./run-manuserver-in-vm.sh backup` |
 | Put a saved copy back | `./run-manuserver-in-vm.sh restore` |
 | Watch it start up in a window | `./run-manuserver-in-vm.sh console` |
@@ -118,8 +119,6 @@ That uses the newest backup. To pick a different one, name the file:
 Restoring replaces what is on the server, so it asks you to confirm first.
 
 Both commands ask for the server password, and both need the server running.
-They will not work until the database is actually installed, which happens in
-the setup script that is still a placeholder.
 
 ## Careful with `install`
 
@@ -129,116 +128,99 @@ first, so it cannot happen by accident. Take a backup before you do it anyway.
 
 ## How to tell it worked
 
-Near the end of the install you should see a line saying **provisioning the
-server**. That means the installer downloaded this repo onto the new machine
-and ran the setup script inside it.
+Open <http://localhost:8080>. A black page saying **tastehopping** means all of
+it worked — web server, PHP and database.
 
-To check afterwards, look at the machine's screen:
-
-```sh
-./run-manuserver-in-vm.sh console
-```
-
-A window opens, the machine starts, and it logs itself in. You should see:
-
-```
-  manuserver provisioning begins here
-```
-
-If that text is there, everything worked. Close the window when you are done
-(the machine keeps running; use `stop` if you want it off).
-
-You can also check from a terminal instead:
+If it does not load:
 
 ```sh
 ./run-manuserver-in-vm.sh ssh yourname
-cat /var/log/manuserver-provision.log
+systemctl status nginx php-fpm postgresql manuserver-db
 ```
 
-**Important:** that setup script lives in this repo on GitHub, and the
-installer downloads it from there. If you change it on your computer, you must
-push the change to GitHub before it makes any difference to a new install.
+All four should say **active**. `manuserver-db` says `active (exited)`, which
+is correct — it is a setup job that finishes. `journalctl -u manuserver-db`
+says why if the database did not come up.
 
-## Reaching it from a browser
+**Note:** the setup script comes from this repo on GitHub, so changes on your
+own computer do nothing until you push them.
 
-Once there is a website on it, it will be at `http://localhost:8080` on this
-computer.
+## The website
 
-**Right now there is no website on it.** The part that installs the web server
-has not been written yet, so your browser will say it cannot connect. This is
-expected. The rest of the system is installed and working, which is what the
-"begins here" message above tells you.
+It is called **tastehopping**: an anonymous place to keep YouTube videos other
+people found worth keeping, and to vote on them.
+
+No usernames, no passwords. Press **join** and you get a made-up name and one
+long key. **The key is your account** — save it the moment you see it. It is
+shown once; the server keeps only a scrambled copy, so it cannot show it again
+or send it to you. Lose it and you start a new account.
+
+Paste a YouTube link under **add** and the title is fetched for you. Click a
+name to see what that person kept, and follow them. The slider under each feed
+filters by reputation: everyone sits somewhere from 0 to 1000, and you pick the
+part of the range you want to hear from.
+
+## Changing the website
+
+No reinstall needed. The machine has a copy of this repo at `/srv/manuserver`,
+and that copy is what it serves.
+
+```sh
+./run-manuserver-in-vm.sh ssh yourname
+cd /srv/manuserver && sudo git pull
+sudo systemctl restart manuserver-db   # only if the database schema changed
+```
+
+To try changes first, run the site on your own computer — from the top of the
+repo, then open <http://localhost:8000>:
+
+```sh
+./server/dev/run-local.sh          # add `seed` to fill it with test accounts
+```
+
+It builds its own small database in `server/dev/.cluster` and touches nothing
+else. Needs `postgresql` and `php-pgsql`; it says so if they are missing.
 
 ## Putting it on the public internet
 
-The normal way to do this is to forward a port on your router. If you cannot
-get into your router, that is not an option, and neither is anything else that
-needs an incoming connection.
+A **tunnel** does this without touching your router: the server dials out to
+Cloudflare, and visitors are passed back down that connection. It is free, and
+`cloudflared` is already installed on your machine, switched off, waiting for a
+token.
 
-The way around it is a **tunnel**. The server makes an outgoing connection to
-a company's network, and they pass public visitors back down that connection.
-Nothing has to be opened on your side. Cloudflare does this for free.
+### 1. Get a token, in a browser
 
-What you get at the end: `https://manuserver.manujarvinen.com`, working from
-anywhere, with a valid certificate.
+1. Free account at [cloudflare.com](https://cloudflare.com) → **Add a site** →
+   `manujarvinen.com`, Free plan.
+2. It gives you **two nameservers**. Replace the ones at your registrar with
+   those. Check the DNS records Cloudflare copied over first, or your existing
+   website and email will break. Then wait for **Active** — minutes to a day.
+   This is the slow part and the only annoying one.
+3. **Zero Trust → Networks → Tunnels → Create a tunnel** → *Cloudflared*, name
+   it `manuserver`, save.
+4. Copy the long string starting `eyJhIjoi` out of the command it shows you.
+   That is the token. Treat it like a password.
+5. On the same tunnel, add a **Public Hostname**: subdomain `manuserver`,
+   domain `manujarvinen.com`, service type `HTTP`, URL `localhost:80`.
 
-### Before you start
-
-Your domain's DNS has to be handled by Cloudflare. This means changing the
-nameservers at whoever you bought `manujarvinen.com` from, to the two
-Cloudflare gives you. Cloudflare copies your existing records first, so your
-cPanel website and email keep working — but check the copied records before you
-switch, because anything it missed will break.
-
-This is the one genuinely annoying part. It is a one-time job.
-
-### Set up the tunnel
-
-**1.** Add `manujarvinen.com` to Cloudflare (free plan) and change the
-nameservers as it instructs. Wait for it to say "Active".
-
-**2.** In Cloudflare, go to **Zero Trust → Networks → Tunnels → Create a
-tunnel**. Choose *Cloudflared*, name it `manuserver`, and continue. It shows
-you an install command containing a long token. Copy the token.
-
-**3.** Get a terminal on the server:
+### 2. Turn it on
 
 ```sh
-./run-manuserver-in-vm.sh ssh yourname
+./run-manuserver-in-vm.sh tunnel   # virtual machine
+sudo manuserver-tunnel             # real server, over ssh
 ```
 
-**4.** Install it, pasting your token in place of `YOUR_TOKEN`:
+Paste the token at the prompt — nothing appears as you paste, which is
+deliberate. It tells you within a few seconds whether the tunnel came up. On a
+real server, its address is on its own screen, next to **on this network**.
 
-```sh
-sudo pacman -S cloudflared
-sudo cloudflared service install YOUR_TOKEN
-```
+`https://manuserver.manujarvinen.com` now works from anywhere, with a valid
+certificate. `tunnel status` and `tunnel off` do what they say; `off` deletes
+the token and the site keeps running locally.
 
-**5.** Back in Cloudflare, on the same tunnel, add a **Public Hostname**:
-
-- Subdomain: `manuserver`
-- Domain: `manujarvinen.com`
-- Service type: `HTTP`
-- URL: `localhost:80`
-
-Save. That is the whole setup.
-
-### Then
-
-`https://manuserver.manujarvinen.com` now reaches the server. You can point
-`manujarvinen.com/manuserver` at it with a redirect in cPanel.
-
-Three things worth knowing:
-
-- **Only what you listed is public.** The tunnel exposes the one hostname and
-  the one port you named. SSH and everything else on the machine stay
-  unreachable from outside.
-- **It will not work until there is a web server.** Nothing on the machine is
-  listening on port 80 yet, so visitors get an error page from Cloudflare until
-  that part is written.
-- **It does not survive a reinstall.** Installing it by hand like this is fine
-  for now. When the real setup script is written, it can do all of the above
-  automatically, and you only paste the token once.
+- Only that one hostname and port are public. SSH stays unreachable.
+- The server has to be running, or visitors get a Cloudflare error page.
+- It survives reboots. `install` erases the token along with everything else.
 
 ## Installing on a real computer instead of a virtual machine
 

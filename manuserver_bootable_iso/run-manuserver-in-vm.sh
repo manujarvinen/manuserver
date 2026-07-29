@@ -8,6 +8,7 @@
 #   ./run-manuserver-in-vm.sh stop       ask it to shut down cleanly
 #   ./run-manuserver-in-vm.sh status     is it up, and on which ports
 #   ./run-manuserver-in-vm.sh ssh [user] open a shell on it
+#   ./run-manuserver-in-vm.sh tunnel     put the site on the public internet
 #   ./run-manuserver-in-vm.sh backup     save the database to backups/
 #   ./run-manuserver-in-vm.sh restore    put a saved database back
 #   ./run-manuserver-in-vm.sh console    boot it in a window, to watch it boot
@@ -315,6 +316,32 @@ cmd_ssh() {
   exec ssh "${opts[@]}" "$user@localhost"
 }
 
+# Putting the server on the internet means pasting a ~200-character Cloudflare
+# token, and QEMU has no clipboard into a guest console — typing it by hand on
+# the VM's own screen is not a real option. So this is deliberately an ssh
+# session in *your* terminal, where paste works the way it always does.
+#
+# The token goes straight from your clipboard into the prompt on the server.
+# This script never receives it, never passes it as an argument, and cannot
+# leave it in the host's shell history or process list.
+cmd_tunnel() {
+  vm_running || die "not running — start it with: $0"
+
+  local action=on user=$USER
+
+  case ${1:-} in
+    on|off|status) action=$1; shift ;;
+  esac
+
+  [[ -n ${1:-} ]] && user=$1
+
+  local -a opts=()
+  mapfile -t opts < <(ssh_opts)
+  opts+=(-t)
+
+  exec ssh "${opts[@]}" "$user@localhost" "sudo manuserver-tunnel $action"
+}
+
 # vm_run <tty|notty> <user> <command...>
 #
 # `tty` allocates a terminal, which sudo needs in order to ask for a password.
@@ -340,8 +367,11 @@ readonly REMOTE_TMP=/tmp/manuserver-db.sql
 require_postgres() {
   local user=$1
   vm_run notty "$user" 'command -v pg_dumpall >/dev/null 2>&1' ||
-    die "Postgres is not installed on the server yet.
-     That happens in server/deploy/provision.sh, which is still a placeholder."
+    die "Postgres is not installed on the server.
+     It is installed by server/deploy/provision.sh during the install. If this
+     machine was installed before that script existed, bring it up to date:
+       $0 ssh $user
+       cd /srv/manuserver && sudo git pull && sudo bash server/deploy/provision.sh"
 }
 
 newest_backup() {
@@ -427,6 +457,7 @@ case "${1:-start}" in
   stop|down) cmd_stop ;;
   status) cmd_status ;;
   ssh) shift; cmd_ssh "$@" ;;
+  tunnel) shift; cmd_tunnel "$@" ;;
   backup) shift; cmd_backup "$@" ;;
   restore) shift; cmd_restore "$@" ;;
   console) cmd_console ;;

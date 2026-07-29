@@ -4,3 +4,6 @@ manuserver_bootable_iso/out/
 
 # Database copies. These hold real data and have no business in a public repo.
 manuserver_bootable_iso/backups/
+
+# The throwaway Postgres cluster server/dev/run-local.sh builds for itself.
+server/dev/.cluster/

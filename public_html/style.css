@@ -1,0 +1,367 @@
+/*
+ * style.css — the layout from references/tastehopping_ref.html, scaled up.
+ *
+ * The reference was drawn at 14px on a 794px column, which reads small on a
+ * real screen. Everything here is the same design at a larger size: 16px
+ * base, a 920px column, and proportionally more air between rows. Nothing
+ * about the structure changed.
+ *
+ * The reference pulled Inter from Google Fonts. That is one request per
+ * visitor to a third party carrying their IP address, on a site whose entire
+ * premise is that nobody is identified — so the webfont is gone and the stack
+ * below uses whatever the machine already has. On most of them that is Inter
+ * or something drawn from the same well.
+ */
+
+:root {
+  --bg: #0b0b0b;
+  --surface: #101010;
+  --text: #f2f2f2;
+  --muted: #8d8d8d;
+  --soft: #666;
+  --line: #1a1a1a;
+  --accent: #bdbdbd;
+  --warn: #d98b8b;
+  --maxw: min(920px, calc(100vw - 40px));
+  --font: Inter, "Inter var", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, "Helvetica Neue", system-ui, sans-serif;
+}
+
+* { box-sizing: border-box }
+
+html, body { margin: 0; min-height: 100% }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font: 400 16px/1.6 var(--font);
+  letter-spacing: 0;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+a { color: inherit; text-decoration: none }
+
+.shell {
+  width: var(--maxw);
+  margin: 0 auto;
+  padding: 36px 0 72px;
+}
+
+/* --- masthead ----------------------------------------------------------- */
+
+.top { margin-bottom: 26px }
+
+.brand {
+  display: inline-block;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: .01em;
+}
+
+.nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin: 0 0 34px;
+  padding: 0;
+}
+
+.nav a {
+  color: var(--muted);
+  transition: color .15s ease;
+}
+
+.nav a:hover { color: var(--text) }
+.nav a.active { color: var(--text) }
+
+.flash {
+  margin: 0 0 22px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+  color: var(--accent);
+  font-size: 14px;
+}
+
+/* --- feed --------------------------------------------------------------- */
+
+.feed { min-height: 260px }
+
+.block { padding: 0 }
+
+.empty,
+.what { color: var(--muted) }
+
+.what { max-width: 64ch }
+.what p { margin: 0 0 16px }
+.what p:last-child { margin-bottom: 0 }
+
+.list { display: grid; gap: 0 }
+
+.item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 15px;
+  align-items: stretch;
+  padding: 15px 0 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.item:first-child { border-top: 1px solid var(--line) }
+
+.item.no-like {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+}
+
+/* A post that reports have pulled from the feeds, still shown to its author. */
+.item.is-hidden .title { color: var(--soft) }
+
+.like-form { display: flex; align-self: stretch }
+
+.post-body { min-width: 0 }
+
+.title {
+  display: block;
+  color: var(--text);
+  font-size: 17px;
+  font-weight: 500;
+  line-height: 1.4;
+  margin: 0 0 5px;
+}
+
+.title:hover { color: #fff; text-decoration: underline }
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 12px;
+  color: var(--soft);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.meta strong { font-weight: 500; color: var(--muted) }
+
+.nick { color: var(--muted) }
+.nick:hover { color: var(--text) }
+
+/* --- controls ------------------------------------------------------------ */
+
+/*
+ * Every control on the site is a button inside a form, including the ones
+ * that look like links. .action strips the browser's button styling back to
+ * text so a "report" button and a "more" link are indistinguishable, which is
+ * what the reference drew.
+ */
+.action {
+  appearance: none;
+  border: 0;
+  background: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.action:hover { color: var(--text) }
+
+.inline { display: inline }
+
+.like-box,
+.framed-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30px;
+  border: 1px solid rgba(255, 255, 255, .13);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font: 500 12.5px/1 var(--font);
+  padding: 0 12px;
+}
+
+.like-box {
+  align-self: stretch;
+  width: 66px;
+  padding: 0;
+}
+
+.framed-action { min-width: 92px }
+
+.like-box:not(:disabled):hover,
+.framed-action:hover {
+  border-color: rgba(255, 255, 255, .28);
+  color: var(--text);
+}
+
+.like-box:disabled {
+  color: rgba(141, 141, 141, .34);
+  cursor: default;
+}
+
+.like-box.liked,
+.framed-action.given {
+  border-color: rgba(255, 255, 255, .38);
+  background: rgba(255, 255, 255, .08);
+  box-shadow: 0 0 14px rgba(255, 255, 255, .11);
+  color: var(--text);
+}
+
+/* --- panels and pagination ---------------------------------------------- */
+
+.panel {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 12px;
+  padding-top: 20px;
+  margin-top: 20px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.panel-line {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.more {
+  display: inline-block;
+  margin-top: 18px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.more:hover { color: var(--text) }
+
+/* --- reputation slider --------------------------------------------------- */
+
+.range {
+  padding-top: 22px;
+  margin-top: 22px;
+}
+
+.range-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+
+.range output { color: var(--text) }
+
+input[type=range] {
+  width: 100%;
+  margin: 0;
+  accent-color: #8a8a8a;
+  background: transparent;
+}
+
+.scale {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  color: var(--soft);
+  font-size: 12px;
+}
+
+.range-apply { margin-top: 14px }
+
+/* --- forms --------------------------------------------------------------- */
+
+.form-block { max-width: 64ch; color: var(--muted) }
+
+.note { margin: 0 0 16px }
+.note strong { color: var(--text); font-weight: 500 }
+
+.warn { margin: 0 0 16px; color: var(--warn) }
+
+.stack {
+  display: grid;
+  gap: 18px;
+  justify-items: start;
+  margin: 24px 0;
+}
+
+.field {
+  display: grid;
+  gap: 7px;
+  width: 100%;
+}
+
+.field > span { color: var(--soft); font-size: 13px }
+
+.field input,
+.field textarea {
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, .13);
+  background: var(--surface);
+  color: var(--text);
+  font: 400 15px/1.5 var(--font);
+  padding: 10px 12px;
+  resize: vertical;
+}
+
+.field input:focus,
+.field textarea:focus {
+  outline: 0;
+  border-color: rgba(255, 255, 255, .38);
+}
+
+.field textarea {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 14px;
+  word-break: break-all;
+}
+
+/* The one-and-only showing of an account key. */
+.keybox {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  border: 1px solid rgba(255, 255, 255, .22);
+  background: var(--surface);
+  padding: 16px;
+  margin: 0 0 20px;
+}
+
+.keybox code {
+  flex: 1 1 320px;
+  min-width: 0;
+  color: var(--text);
+  font: 400 14px/1.7 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  word-break: break-all;
+  user-select: all;
+}
+
+/* --- small screens -------------------------------------------------------- */
+
+@media (max-width: 640px) {
+  body { font-size: 15px }
+
+  .shell {
+    width: min(920px, calc(100vw - 28px));
+    padding: 24px 0 48px;
+  }
+
+  .nav {
+    gap: 12px 16px;
+    margin-bottom: 26px;
+  }
+
+  .item { padding: 13px 0 14px; gap: 12px }
+
+  .title { font-size: 16px }
+
+  .meta { gap: 10px }
+}

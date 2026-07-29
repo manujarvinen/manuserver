@@ -1,77 +1,347 @@
 #!/usr/bin/env bash
 #
-# provision.sh — placeholder. Proves the install chain reaches this file.
+# provision.sh — turns the bare Arch system the ISO just installed into the
+# server that runs Tastehopping.
 #
 # The installer runs this at the very end of an install, under `arch-chroot`,
-# as root, on the freshly installed system. Today it installs nothing; it just
-# leaves proof that it ran. Replace the body with the real server setup
-# (Postgres, PHP, nginx) when that exists — the ISO does not need rebuilding
-# for that, which is the whole point of this hook.
+# as root, on the freshly installed system. It is the reason the ISO can stop
+# changing: everything below iterates with a push and a reinstall.
 #
-# When nginx goes in here, its document root should point at
-# /srv/manuserver/public_html — that is the site this server serves. The other
-# folder, manuserver-website/, is a promo page hosted elsewhere and has no
-# business on this machine.
-#
-# Two rules for whatever replaces this:
+# Two rules, both of which shape what is here:
 #
 #   1. There is no running init inside arch-chroot. `systemctl enable` works,
-#      `systemctl start` does not. Anything needing a live service has to defer
-#      to a first-boot one-shot unit.
-#   2. It must be safe to run again. A reinstall runs it from scratch, but a
-#      half-finished run should not wedge the next one.
+#      `systemctl start` does not. Anything needing a live service defers to
+#      manuserver-db.service, the one-shot below.
+#   2. It must be safe to run again. Every write here is an overwrite or a
+#      create-if-missing, and nothing is generated twice.
+#
+# There are no passwords anywhere in this file, and none on the machine it
+# builds. The site reaches Postgres over a unix socket, authenticated by which
+# OS user opened it — see the pg_ident map in db-setup.sh. A credential that
+# does not exist cannot be leaked, committed, or left in a backup.
 
 set -euo pipefail
 
-# Empty in real use. Tests point it at a temp directory so this script can be
-# run without writing to the machine it is running on.
+# Empty in real use. Point it at a directory to render every config file
+# somewhere harmless and skip pacman, initdb and systemctl — enough to read
+# what an install would produce without installing anything.
 : "${PROVISION_ROOT:=}"
 
-readonly MARKER='manuserver provisioning begins here'
+# cloudflared is in `extra`, not the AUR, so publishing this server to the
+# internet needs no build tools and no AUR helper on a machine that has
+# neither. It is installed here but does nothing until someone runs
+# `manuserver-tunnel` and gives it a token.
+readonly PACKAGES=(nginx php php-fpm php-pgsql postgresql cloudflared)
+
+readonly SITE_DIR=/srv/manuserver
+readonly DOC_ROOT="$SITE_DIR/public_html"
+readonly PGDATA=/var/lib/postgres/data
+readonly SESSION_DIR=/var/lib/php/sessions
 readonly LOG="$PROVISION_ROOT/var/log/manuserver-provision.log"
-readonly MOTD="$PROVISION_ROOT/etc/motd"
-readonly GREETING="$PROVISION_ROOT/etc/profile.d/manuserver-provision.sh"
 
-# Goes to the installer's log on the live system, visible on the failure screen
-# if anything below breaks.
-printf '=== %s ===\n' "$MARKER"
+# In test mode, describe the step instead of taking it.
+if [[ -n $PROVISION_ROOT ]]; then
+  run() { printf '  would run: %s\n' "$*"; }
+else
+  run() { "$@"; }
+fi
 
-install -d "$(dirname "$LOG")" "$(dirname "$MOTD")" "$(dirname "$GREETING")"
+step() { printf '=== %s ===\n' "$*"; }
 
+write() {
+  local path="$PROVISION_ROOT$1"
+  install -d "$(dirname "$path")"
+  cat >"$path"
+  printf '  wrote %s\n' "$1"
+}
+
+# --- packages --------------------------------------------------------------
+
+step 'installing nginx, php and postgres'
+
+# --needed makes a second run a no-op rather than a reinstall.
+#
+# -Syu, not -Sy. During an install the difference is nothing — pacstrap pulled
+# these mirrors minutes ago, so there is nothing to upgrade. But this script is
+# also the way the server is provisioned by hand months later, and there `-Sy`
+# is the classic Arch partial-upgrade footgun: a fresh package index against
+# stale installed packages, linked against libraries that are no longer there.
+run pacman -Syu --needed --noconfirm "${PACKAGES[@]}"
+
+# --- php -------------------------------------------------------------------
+#
+# Arch ships the postgres driver as a shared object that nothing loads until
+# it is asked for. A drop-in in conf.d rather than an edit to php.ini, so a
+# package upgrade replacing php.ini cannot quietly undo it.
+
+step 'configuring php'
+
+write /etc/php/conf.d/manuserver.ini <<'INI'
+; Written by server/deploy/provision.sh. Edits here are lost on reprovision.
+
+; The only reason php-pgsql is installed.
+extension=pdo_pgsql
+
+; Nothing good comes of announcing the version in every response header.
+expose_php = Off
+
+; Errors go to the journal, never to the browser. A stack trace on a public
+; page is a map of the filesystem.
+display_errors = Off
+display_startup_errors = Off
+log_errors = On
+
+; Sessions outlive a php-fpm restart here, which matters more than usual: the
+; only alternative to a live session is digging out the account key again.
+session.save_path = "/var/lib/php/sessions"
+session.gc_maxlifetime = 31536000
+session.cookie_lifetime = 31536000
+session.use_strict_mode = 1
+
+; A form post carries a link and a title. Anything larger is not one of ours.
+post_max_size = 256K
+upload_max_filesize = 0
+file_uploads = Off
+INI
+
+run install -d -o http -g http -m 700 "$SESSION_DIR"
+
+# --- nginx -----------------------------------------------------------------
+
+step 'configuring nginx'
+
+write /etc/nginx/nginx.conf <<NGINX
+# Written by server/deploy/provision.sh. Edits here are lost on reprovision.
+
+user http;
+worker_processes auto;
+pid /run/nginx.pid;
+
+events {
+    worker_connections 1024;
+}
+
+http {
+    include       mime.types;
+    default_type  application/octet-stream;
+
+    sendfile        on;
+    tcp_nopush      on;
+    keepalive_timeout 65;
+    client_max_body_size 256k;
+
+    # Deliberately off. This server exists to hold things people saved without
+    # saying who they are, and an access log is a list of who visited, from
+    # where, and when — the exact record the site promises not to keep. Turn
+    # it on while debugging if you need it, and turn it back off.
+    access_log off;
+    error_log  /var/log/nginx/error.log warn;
+
+    server_tokens off;
+
+    server {
+        listen      80 default_server;
+        listen [::]:80 default_server;
+        server_name _;
+
+        root  $DOC_ROOT;
+        index index.php;
+
+        add_header X-Content-Type-Options nosniff always;
+        add_header X-Frame-Options DENY always;
+        add_header Referrer-Policy no-referrer always;
+
+        # Every address that is not a file on disk is the front controller's
+        # problem. This one line is the entire router.
+        location / {
+            try_files \$uri /index.php\$is_args\$args;
+        }
+
+        location ~ \.php\$ {
+            # index.php is the only program in the document root. Anything
+            # else ending in .php that ever lands there is a mistake or an
+            # attack, and either way it is a 404 rather than something run.
+            try_files \$uri =404;
+
+            include      fastcgi.conf;
+            fastcgi_pass unix:/run/php-fpm/php-fpm.sock;
+            fastcgi_read_timeout 30s;
+        }
+
+        location = /favicon.ico {
+            log_not_found off;
+        }
+
+        # Dotfiles, including anything a stray .git would put here.
+        location ~ /\. {
+            deny all;
+        }
+    }
+}
+NGINX
+
+# --- postgres --------------------------------------------------------------
+#
+# initdb only writes files, so it is one of the few real actions that works
+# inside a chroot with no init. Doing it here rather than at first boot means
+# postgresql.service comes up cleanly the very first time instead of failing
+# once and being repaired afterwards.
+#
+# C.UTF-8 rather than the system locale: it is built into glibc and needs no
+# locale-gen to have run first, which removes an ordering dependency on the
+# rest of the install.
+
+step 'creating the postgres cluster'
+
+if [[ -n $PROVISION_ROOT ]]; then
+  printf '  would run: initdb --pgdata=%s\n' "$PGDATA"
+elif [[ -f $PGDATA/PG_VERSION ]]; then
+  printf '  cluster already exists at %s\n' "$PGDATA"
+else
+  install -d -o postgres -g postgres -m 700 "$PGDATA"
+  su postgres -c "initdb --pgdata='$PGDATA' --encoding=UTF8 --locale=C.UTF-8 \
+    --auth-local=peer --auth-host=scram-sha-256" >/dev/null
+  printf '  created %s\n' "$PGDATA"
+fi
+
+# --- the first-boot one-shot ------------------------------------------------
+#
+# Creating a role, creating a database and applying a schema all need a
+# running Postgres, which does not exist in here. This unit does that work on
+# every boot instead. It is ordered after postgresql.service, it is idempotent,
+# and it lives in the repo — so fixing it later is a push, a `git pull` on the
+# server and `systemctl start manuserver-db`, with no reinstall.
+
+step 'installing the database setup unit'
+
+write /etc/systemd/system/manuserver-db.service <<UNIT
+[Unit]
+Description=manuserver database setup
+Documentation=file://$SITE_DIR/server/deploy/db-setup.sh
+Wants=postgresql.service
+After=postgresql.service
+ConditionPathExists=$SITE_DIR/server/deploy/db-setup.sh
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/bash $SITE_DIR/server/deploy/db-setup.sh
+
+[Install]
+WantedBy=multi-user.target
+UNIT
+
+# --- the public tunnel -------------------------------------------------------
+#
+# Installed ready and switched off. The unit below is enabled unconditionally,
+# but ConditionPathExists means it does nothing at all until a token file
+# exists — so provisioning never puts this machine on the internet by
+# accident, and turning it on later is one command with no reprovisioning.
+#
+# The token is read from the environment rather than passed as an argument.
+# cloudflared takes TUNNEL_TOKEN from the environment for exactly this reason:
+# an argument would sit in `ps` output for every user on the machine to read.
+
+step 'installing the tunnel'
+
+write /etc/systemd/system/manuserver-tunnel.service <<'UNIT'
+[Unit]
+Description=manuserver public tunnel (cloudflare)
+Documentation=man:cloudflared(1)
+After=network-online.target nginx.service
+Wants=network-online.target
+
+# No token, no tunnel. This is what makes "enabled" safe.
+ConditionPathExists=/etc/manuserver/tunnel.env
+
+[Service]
+Type=simple
+EnvironmentFile=/etc/manuserver/tunnel.env
+ExecStart=/usr/bin/cloudflared --no-autoupdate tunnel run
+Restart=on-failure
+RestartSec=5s
+
+# cloudflared wants somewhere to put its cache. StateDirectory gives it one
+# that survives ProtectSystem=strict.
+StateDirectory=cloudflared
+Environment=HOME=/var/lib/cloudflared
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+
+[Install]
+WantedBy=multi-user.target
+UNIT
+
+# A symlink rather than a copy, so `git pull` updates the command along with
+# everything else.
+run ln -sfn "$SITE_DIR/server/deploy/tunnel.sh" /usr/local/bin/manuserver-tunnel
+
+# --- services ---------------------------------------------------------------
+
+step 'enabling services'
+
+run systemctl enable nginx.service php-fpm.service postgresql.service \
+  manuserver-db.service manuserver-tunnel.service
+
+# --- the console message ----------------------------------------------------
+#
+# The installed system autologins on tty1, so this is the first thing on
+# screen after boot. It is how "did this work?" gets answered at a glance.
+
+step 'writing the console message'
+
+# Both of these are what the placeholder left behind. A static file cannot say
+# what this machine's address is or whether the tunnel is up, and those are the
+# two things worth knowing at a glance.
+rm -f "$PROVISION_ROOT/etc/profile.d/manuserver-provision.sh" "$PROVISION_ROOT/etc/motd"
+
+# On a home server with no keyboard attached this is the screen you walk over
+# and read: it tells you where the machine is on the network, which is what
+# you need in order to ssh in and set the tunnel up from a machine that can
+# paste.
+write /etc/profile.d/manuserver.sh <<'SH'
+# shellcheck shell=sh
+# Written by server/deploy/provision.sh. Edits here are lost on reprovision.
+#
+# Printed by every login shell, which on this machine means the autologin
+# console shows it the moment the system finishes booting.
+
+printf '\n  manuserver — tastehopping\n\n'
+
+_ms_address=$(ip -4 -brief address show scope global 2>/dev/null |
+  awk '{ print $3 }' | cut -d/ -f1 | head -n 1)
+
+[ -n "$_ms_address" ] && printf '  on this network:   http://%s/\n' "$_ms_address"
+printf '  from the vm host:  http://localhost:8080/\n'
+
+if [ -f /etc/manuserver/tunnel.env ]; then
+  if systemctl is-active --quiet manuserver-tunnel.service 2>/dev/null; then
+    printf '  on the internet:   up\n'
+  else
+    printf '  on the internet:   token set, but the tunnel is not running\n'
+  fi
+else
+  printf '  on the internet:   off — turn it on with: sudo manuserver-tunnel\n'
+fi
+
+printf '\n  systemctl status nginx php-fpm postgresql manuserver-db\n\n'
+
+unset _ms_address
+SH
+
+chmod 644 "$PROVISION_ROOT/etc/profile.d/manuserver.sh"
+
+install -d "$(dirname "$LOG")"
 {
-  printf '%s\n' "$MARKER"
-  printf 'when:  %s\n' "$(date -Iseconds)"
-  printf 'host:  %s\n' "$(cat "$PROVISION_ROOT/etc/hostname" 2>/dev/null || echo unknown)"
-  printf 'user:  %s\n' "$(id -un)"
-  printf 'where: %s\n' "$0"
+  printf 'manuserver provisioning\n'
+  printf 'when:     %s\n' "$(date -Iseconds)"
+  printf 'host:     %s\n' "$(cat "$PROVISION_ROOT/etc/hostname" 2>/dev/null || echo unknown)"
+  printf 'packages: %s\n' "${PACKAGES[*]}"
+  printf 'docroot:  %s\n' "$DOC_ROOT"
+  printf 'cluster:  %s\n' "$PGDATA"
 } >"$LOG"
 
-# The installed system autologins on tty1, so the motd is the first thing on
-# screen after boot. That makes "did provisioning run?" answerable at a glance,
-# without logging in or reading a file.
-cat >"$MOTD" <<EOF
-
-  $MARKER
-
-  Nothing is installed on this server yet. This message means the installer
-  cloned the repo and ran server/deploy/provision.sh successfully.
-
-  Details: /var/log/manuserver-provision.log
-  Replace: server/deploy/provision.sh in the manuserver repo
-
-EOF
-
-# Belt and braces. Whether /etc/motd is displayed at all depends on PAM being
-# configured for it, and this message is the only thing that says the install
-# chain worked -- it should not hinge on that. A profile.d snippet prints on
-# every login shell regardless, which on this machine means the autologin
-# console shows it the moment the system boots.
-cat >"$GREETING" <<EOF
-# shellcheck shell=sh
-# Placeholder from server/deploy/provision.sh. Delete this when the real
-# server setup replaces it.
-printf '\n  %s\n\n' '$MARKER'
-EOF
-chmod 644 "$GREETING"
-
-printf 'wrote %s, %s and %s\n' "$LOG" "$MOTD" "$GREETING"
+step 'done — the database is set up on first boot by manuserver-db.service'

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>manuserver</title>
+<title>MANUSERVER</title>
 <style>
   :root {
     --bg: #2E1522;
@@ -39,9 +39,17 @@
     letter-spacing: 0.08em;
     text-transform: uppercase;
   }
+  h3 {
+    margin: 2rem 0 0.75rem;
+    color: var(--code);
+    font-size: 0.9375rem;
+    letter-spacing: 0.04em;
+  }
   p { margin: 0 0 1rem; }
   ol { margin: 0; padding-left: 1.25rem; }
   ol > li { margin-bottom: 1.75rem; }
+  ul { margin: 0 0 1rem; padding-left: 1.25rem; }
+  ul > li { margin-bottom: 0.5rem; }
 
   /* Commands you type. Monospace, and scrollable rather than wrapped, so a
      long command is never silently broken across lines. */
@@ -85,10 +93,18 @@
     A server — in a virtual machine, or on a real computer as a home server —
     for serving a website with a Postgres database.
   </p>
+  <p>
+    The website it serves is <strong>tastehopping</strong>: an anonymous place
+    for the YouTube videos other people found worth keeping, and for voting on
+    them. There are no emails, no passwords and no profiles — joining is one
+    button, and the server hands you a made-up name and one long key that
+    <em>is</em> the account.
+  </p>
   <p class="note">
-    Work in progress: today it installs the machine itself. The website and
-    database are what comes next, and they arrive without rebuilding the
-    <code>.iso</code>.
+    One install gets all of it. nginx, PHP, Postgres and the tunnel software
+    go on during the install, and the database sets itself up on first boot.
+    Nothing is left for you to configure afterwards except the one thing that
+    needs a secret: putting it on the public internet.
   </p>
 
   <p class="requirement">
@@ -152,18 +168,26 @@ cd manuserver/manuserver_bootable_iso
         later.
       </p>
     </li>
+    <li>
+      Open <a href="http://localhost:8080">localhost:8080</a>. The website is
+      there, with its database already built. Press <strong>join</strong> and
+      save the key it gives you — it is shown once and the server keeps only a
+      scrambled copy, so it cannot show it to you again.
+    </li>
   </ol>
 
   <h2>Running it</h2>
   <p>
     The cloned GitHub repository paradoxically includes the making of the
-    server that clones the exact same repository onto itself — which, for now,
-    is what sets the server up. It is a multi-purpose repository.
+    server that clones the exact same repository onto itself — and that clone
+    is what sets the server up, at the end of every install. It is a
+    multi-purpose repository.
   </p>
 <pre>./run-manuserver-in-vm.sh             start it
 ./run-manuserver-in-vm.sh stop        shut it down
 ./run-manuserver-in-vm.sh status      is it running?
 ./run-manuserver-in-vm.sh ssh mj      open a terminal on it
+./run-manuserver-in-vm.sh tunnel      put it on the public internet
 ./run-manuserver-in-vm.sh backup mj   save the database to a file</pre>
   <p class="note">
     Replace <code>mj</code> with the username you gave the installer. Leave it
@@ -184,6 +208,54 @@ cd manuserver/manuserver_bootable_iso
   <p>
     That is the password you chose during the manuserver install — not the
     password of your own computer.
+  </p>
+
+  <h2>Putting it on the internet</h2>
+  <p>
+    A <strong>tunnel</strong> publishes the server without touching your
+    router: it dials out to Cloudflare, and visitors are passed back down that
+    connection. Free, and the software is already installed and switched off,
+    waiting for a token.
+  </p>
+
+  <p>First, in a browser:</p>
+  <ol>
+    <li>
+      Free <a href="https://cloudflare.com">Cloudflare</a> account →
+      <strong>Add a site</strong> → your domain, free plan.
+    </li>
+    <li>
+      It gives you two nameservers. Change them at your registrar and wait for
+      <strong>Active</strong> — minutes to a day, and the only slow part. Check
+      the DNS records Cloudflare copied first, or an existing site and email
+      will break.
+    </li>
+    <li>
+      <strong>Zero Trust → Networks → Tunnels → Create a tunnel</strong>.
+      Choose <em>Cloudflared</em>, name it <code>manuserver</code>, save.
+    </li>
+    <li>
+      Copy the long string starting <code>eyJhIjoi</code> out of the command it
+      shows. That is the token. Treat it like a password.
+    </li>
+    <li>
+      On the same tunnel add a <strong>Public Hostname</strong>: your
+      subdomain, type <code>HTTP</code>, URL <code>localhost:80</code>.
+    </li>
+  </ol>
+
+  <p>Then turn it on:</p>
+<pre>./run-manuserver-in-vm.sh tunnel   virtual machine
+sudo manuserver-tunnel             real server, over ssh</pre>
+  <p>
+    Paste the token at the prompt — nothing appears as you paste. It says
+    within a few seconds whether the tunnel came up. Afterwards
+    <code>tunnel status</code> and <code>tunnel off</code> do what they say;
+    <code>off</code> deletes the token.
+  </p>
+  <p class="note">
+    Only the one hostname and port you named are reachable. SSH and everything
+    else on the machine stay invisible from outside.
   </p>
 
   <h2>Leaving it running</h2>
@@ -218,6 +290,64 @@ cd manuserver/manuserver_bootable_iso
     down when idle. If you watch it in a window the screen may go blank after
     ten minutes or so; that is only the display, and a keypress brings it back.
   </p>
+
+  <h2>Security</h2>
+  <p>
+    A small personal server, not a bank — but most of this cost nothing to do
+    properly. What it does not protect you from is at the end.
+  </p>
+
+  <ul>
+    <li>
+      <strong>Root is locked</strong>, so everything goes through
+      <code>sudo</code>: one account, one password, one audit trail. Your
+      password is never written to a file, not even a temporary one.
+    </li>
+    <li>
+      <strong>There is no database password</strong>, so there is none to leak.
+      Postgres works out who is connecting from which system user opened the
+      local socket, and accepts nothing from the network.
+    </li>
+    <li>
+      <strong>Only one file is reachable.</strong> The program and its queries
+      live above the published folder, where no address reaches them. Values go
+      to Postgres separately from the query, so a form cannot rewrite it.
+    </li>
+    <li>
+      Everything typed is escaped before it is shown again, every button that
+      changes something proves the click came from this site, uploads are off,
+      and errors go to the log rather than to the visitor.
+    </li>
+    <li>
+      <strong>Nothing says who anyone is.</strong> No email, no name, and only
+      a scrambled form of your key is stored — a stolen database logs nobody in.
+    </li>
+    <li>
+      <strong>No access log, no third parties.</strong> No fonts from Google,
+      no analytics, no CDN. The only outbound call is to YouTube, to ask what a
+      saved video is called.
+    </li>
+  </ul>
+
+  <h3>What it does not protect you from</h3>
+  <ul>
+    <li>
+      <strong>Anyone holding a key is that account.</strong> No second factor,
+      no recovery — the price of storing nothing about you.
+    </li>
+    <li>
+      <strong>Cloudflare can see the traffic.</strong> Their tunnel, their
+      certificate; they sit in the middle.
+    </li>
+    <li>
+      <strong>SSH takes a password</strong> on your local network, and
+      <strong>the disk is not encrypted</strong>.
+    </li>
+    <li>
+      <strong>Nobody moderates.</strong> Posts vanish once enough separate
+      accounts report them. That is the whole policy.
+    </li>
+  </ul>
 
   <footer>
     Source and full instructions:

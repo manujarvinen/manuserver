@@ -1,0 +1,40 @@
+
+
+
+
+
+
+
+
+
+
+1. `git clone git@github-manujarvinen:manujarvinen/manuserver.git`
+
+2. `cd manuserver/manuserver_bootable_iso`
+
+(`./install-tools.sh` — installs archiso, QEMU, UEFI firmware) <- let's remove this step and do it in step 3, like we do probably already
+
+3. `./build_manuserver_iso.sh` — builds the ISO into `out/` (~20 min)
+
+4. `./run-manuserver-in-vm.sh install` — boots the ISO in a VM; answer the installer's four questions (network, username, password, disk)
+
+5. `./run-manuserver-in-vm.sh` — starts the server VM in the background
+
+Then: 
+`./run-manuserver-in-vm.sh stop` to shut down, 
+`./run-manuserver-in-vm.sh` to start again, 
+`./run-manuserver-in-vm.sh status` to check, 
+`./run-manuserver-in-vm.sh ssh` for a shell.
+
+
+
+
+
+
+What it is
+- Server in virtual machine or real computer (home server) that serves a website with a postgres database.
+
+How to use
+- Make bootable .iso file (minimal custom Arch linux server) by running the script that comes with it. (Takes around 20 minutes)
+— With the .iso file, install the server. That will have no graphical user interface, only terminal.
+- The installer asks only four things — network, username, password, which disk to use — and sets up everything else on its own. However, it wipes the whole disk.

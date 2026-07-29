@@ -1,0 +1,628 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>tastehopping</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0b0b;
+  --surface:#101010;
+  --text:#f2f2f2;
+  --muted:#8d8d8d;
+  --soft:#666;
+  --line:#1a1a1a;
+  --accent:#bdbdbd;
+  --maxw:min(794px, calc(100vw - 32px));
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font:400 14px/1.55 Inter,system-ui,sans-serif;
+  letter-spacing:0;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+
+a{
+  color:inherit;
+  text-decoration:none;
+}
+
+.shell{
+  width:var(--maxw);
+  margin:0 auto;
+  padding:28px 0 56px;
+}
+
+.top{
+  margin-bottom:22px;
+}
+
+.brand{
+  display:inline-block;
+  font-size:14px;
+  font-weight:600;
+  letter-spacing:.01em;
+}
+
+.nav{
+  display:flex;
+  flex-wrap:wrap;
+  gap:14px;
+  margin:0 0 28px;
+  padding:0;
+}
+
+.nav a{
+  color:var(--muted);
+  transition:color .15s ease;
+}
+
+.nav a:hover{color:var(--text)}
+.nav a.active{
+  color:var(--text);
+}
+
+.feed{
+  min-height:220px;
+}
+
+.block{
+  padding:0;
+}
+
+.empty,
+.what{
+  color:var(--muted);
+}
+
+.what{
+  max-width:62ch;
+  white-space:pre-line;
+}
+
+.list{
+  display:grid;
+  gap:0;
+}
+
+.item{
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr);
+  gap:12px;
+  align-items:stretch;
+  padding:12px 0 13px;
+  border-bottom:1px solid var(--line);
+}
+
+.item:first-child{
+  border-top:1px solid var(--line);
+}
+
+.item.no-like{
+  grid-template-columns:minmax(0,1fr);
+  gap:0;
+}
+
+.title{
+  display:block;
+  color:var(--text);
+  font-size:14px;
+  font-weight:500;
+  line-height:1.4;
+  margin:0 0 3px;
+}
+
+.like-box,
+.framed-action{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:24px;
+  border:1px solid rgba(255,255,255,.13);
+  background:transparent;
+  color:var(--muted);
+  cursor:pointer;
+  font:500 11px/1 Inter,system-ui,sans-serif;
+  padding:0 8px;
+}
+
+.like-box{
+  align-self:stretch;
+  width:56px;
+}
+
+.framed-action{
+  min-width:76px;
+}
+
+.like-box:not(:disabled):hover,
+.framed-action:hover{
+  border-color:rgba(255,255,255,.28);
+  color:var(--text);
+}
+
+.like-box:disabled{
+  color:rgba(141,141,141,.34);
+  cursor:default;
+}
+
+.like-box.liked,
+.framed-action.given{
+  border-color:rgba(255,255,255,.38);
+  background:rgba(255,255,255,.08);
+  box-shadow:0 0 14px rgba(255,255,255,.11);
+  color:var(--text);
+}
+
+.post-body{
+  min-width:0;
+}
+
+.title:hover{
+  color:#fff;
+  text-decoration:underline;
+}
+
+.meta{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  color:var(--soft);
+  font-size:12px;
+  line-height:1.45;
+}
+
+.meta strong{
+  font-weight:500;
+  color:var(--muted);
+}
+
+.nick,
+.action{
+  color:var(--muted);
+}
+
+.nick:hover,
+.action:hover{
+  color:var(--text);
+}
+
+.panel{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:flex-start;
+  align-items:center;
+  gap:10px;
+  padding-top:16px;
+  margin-top:16px;
+  color:var(--muted);
+  font-size:12px;
+}
+
+.tools{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+}
+
+.panel-line{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:12px;
+}
+
+.profile-vote{
+  appearance:none;
+  border:0;
+  background:none;
+  color:var(--soft);
+  cursor:pointer;
+  font:inherit;
+  padding:0 0 0 6px;
+}
+
+.profile-vote:hover{
+  color:var(--text);
+}
+
+.range{
+  padding-top:18px;
+  margin-top:18px;
+}
+
+.range-head{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  color:var(--muted);
+  font-size:12px;
+  margin-bottom:8px;
+}
+
+.range output{
+  color:var(--text);
+}
+
+input[type=range]{
+  width:100%;
+  margin:0;
+  accent-color:#8a8a8a;
+  background:transparent;
+}
+
+.scale{
+  display:flex;
+  justify-content:space-between;
+  margin-top:5px;
+  color:var(--soft);
+  font-size:11px;
+}
+
+.more{
+  display:inline-block;
+  margin-top:14px;
+  color:var(--muted);
+  font-size:12px;
+}
+
+.more:hover{
+  color:var(--text);
+}
+
+.home-note{
+  color:var(--muted);
+}
+
+.home-note .action{
+  color:var(--text);
+}
+
+@media (max-width:640px){
+  .shell{
+    width:min(794px, calc(100vw - 24px));
+    padding:20px 0 36px;
+  }
+
+  .nav{
+    gap:10px 12px;
+    margin-bottom:22px;
+  }
+
+  .item{
+    padding:10px 0 11px;
+  }
+
+  .meta{
+    gap:8px;
+  }
+}
+</style>
+</head>
+<body>
+<div class="shell">
+  <header class="top">
+    <a href="#" class="brand" data-view="what">tastehopping</a>
+  </header>
+
+  <nav class="nav" aria-label="Primary">
+    <a href="#" data-view="what">what</a>
+    <a href="#" data-view="new">new</a>
+    <a href="#" data-view="all">popular</a>
+    <a href="#" data-view="random">random</a>
+    <a href="#" data-view="followed">follows</a>
+    <a href="#" data-view="you">you</a>
+  </nav>
+
+  <main id="feed" class="feed"></main>
+</div>
+
+<script>
+const whatText = `tastehopping is an anonymous place about finding out interesting content that other people find the most valuable.
+
+either search randomly, or even better, click usernames to find out and follow strictly just them and the content they enjoyed.`;
+
+const seeds = [
+  { name: "you", reputation: 642, titles: ["midnight lens parade", "glass harbor lullaby", "rust and ribbon loop", "sunset receipt diary", "velour bus reflection", "sleepwalk station tape"] },
+  { name: "cor-mor", reputation: 930, titles: ["velvet syntax bloom", "paper signal motel", "echo ladder cinema"] },
+  { name: "ron-kon", reputation: 210, titles: ["porcelain station loop", "hollow marble tide", "cinder meadow glow"] },
+  { name: "art-ort", reputation: 340, titles: ["night arcade weather", "broken lantern choir", "static blossom reel"] },
+  { name: "sol-sel", reputation: 780, titles: ["opal runway chorus", "dust chapel receiver", "mirror harbor pulse"] },
+  { name: "mia-mor", reputation: 540, titles: ["neon orchard psalm", "window velvet current", "lilac relay sketch"] },
+  { name: "len-lan", reputation: 120, titles: ["tin postcard rhythm", "small arcade snowfall", "weekday cassette glow"] },
+  { name: "iro-zen", reputation: 860, titles: ["horizon archive bloom", "saturn foyer hush", "ultra motel prayer"] },
+  { name: "pal-ori", reputation: 430, titles: ["evening cinema petals", "brass lantern swim", "delta whisper tape"] },
+  { name: "ves-per", reputation: 970, titles: ["amber cathedral drift", "royal feedback ribbon", "cosmic harbor sermon"] },
+  { name: "noa-koi", reputation: 65, titles: ["sidewalk soda dream", "basement postcard hum", "paper kite static"] },
+  { name: "tam-tar", reputation: 610, titles: ["signal blossom habit", "violet freight choir", "frozen arcade prayer"] },
+  { name: "uki-lu", reputation: 485, titles: ["murmur hallway sun", "pearl engine echo", "coral motel refrain"] },
+  { name: "fen-rai", reputation: 275, titles: ["river sleeve transmitter", "quiet pinball bloom", "plastic dawn shimmer"] },
+  { name: "ora-pim", reputation: 705, titles: ["gold stairwell orbit", "aurora ticket chapel", "gentle runway static"] },
+  { name: "dio-mel", reputation: 150, titles: ["weekday lantern swim", "cheap velvet skyline", "postcard hallway rain"] },
+  { name: "kira-nox", reputation: 830, titles: ["chrome harbor lull", "nocturne cassette halo", "silk station sermon"] },
+  { name: "bev-qua", reputation: 390, titles: ["minty signal cabin", "radio citrus dusk", "flicker marble sermon"] },
+  { name: "tul-fon", reputation: 560, titles: ["burnt mirror aria", "silver pocket skyline", "velour engine ritual"] },
+  { name: "rex-ilo", reputation: 995, titles: ["crown motel monsoon", "platinum prayer reel", "diamond static lagoon"] }
+];
+
+const topViews = new Set(["home","what","new","all","random","followed","you"]);
+const pageSize = 6;
+const state = {
+  view:"home",
+  reputation:500,
+  followed:new Set(["cor-mor","mia-mor","fen-rai","ora-pim"]),
+  page:0,
+  liked:new Set(),
+  repGiven:new Set()
+};
+
+const extraA = ["faded","sleepwalk","borrowed","silver","slow","afterhours"];
+const extraB = ["station","receipt","foyer","runway","postcard","arcade"];
+const extraC = ["memory","weather","signal","diary","echo","glow"];
+const tails = [
+  "for people saving rare forum threads before the quiet server light goes out",
+  "collected from a rainy search session where every tab felt like a tiny door",
+  "that somehow explains the whole week better than any normal headline could",
+  "for late readers comparing odd references across a dozen glowing tabs",
+  "after someone followed one useful link and found the better one behind it",
+  "for anyone mapping small obsessions across comments, bookmarks, and old notes",
+  "from a forgotten sidebar where the useful answer was hiding in plain sight",
+  "for slow searches that turn a stray recommendation into a full evening"
+];
+
+const esc = s => s.replace(/[&<>"']/g, m => ({
+  '&':'&amp;',
+  '<':'&lt;',
+  '>':'&gt;',
+  '"':'&quot;',
+  "'":'&#39;'
+}[m]));
+
+const pick = (arr,n) => [...arr].sort(() => Math.random() - .5).slice(0,n);
+const profile = v => !topViews.has(v) && users[v];
+const cap = s => s.length <= 100 ? s : (s.slice(0,101).lastIndexOf(' ') > 76 ? s.slice(0,s.slice(0,101).lastIndexOf(' ')) : s.slice(0,100)).trim();
+const embellish = (title,i,j) => (i + j) % 5 === 1 ? title : cap(`${title} ${tails[(i * 3 + j) % tails.length]}`);
+
+const users = Object.fromEntries(seeds.map((seed,i) => {
+  const titles = seed.titles.length > 3
+    ? seed.titles
+    : [...seed.titles, ...Array.from({length:3}, (_,j) => `${extraA[(i+j)%6]} ${extraB[(i*2+j)%6]} ${extraC[(i*3+j)%6]}`)];
+
+  return [seed.name, {
+    reputation: seed.reputation,
+    posts: titles.map((title,j) => ({
+      id: `${seed.name}-${j}`,
+      title: embellish(title,i,j),
+      likes: Math.max(8, Math.round(seed.reputation * (.16 + (2 - j) * .07)) + ((i + 3) * 11) % 29 + j * 5),
+      hours: ((i * 4 + j * 3) % 18) + 1,
+      user: seed.name,
+      url: '#'
+    }))
+  }];
+}));
+
+function matchedUsers(){
+  const names = Object.keys(users);
+  let span = 90, out = [];
+
+  while (span <= 1000) {
+    out = names.filter(name => Math.abs(users[name].reputation - state.reputation) <= span);
+    if (out.length >= 5) return out;
+    span += 90;
+  }
+  return out;
+}
+
+function pool(onlyFollowed=false){
+  return [...new Set([...matchedUsers(), 'you'])]
+    .filter(name => !onlyFollowed || name === 'you' || state.followed.has(name))
+    .flatMap(name => users[name].posts.map(post => ({...post})));
+}
+
+function itemsFor(view){
+  if (view === 'what') return [{title:whatText}];
+  if (view === 'home') return [];
+  if (view === 'you' || profile(view)) {
+    const posts = users[view].posts.map(post => ({...post}));
+    return posts.slice(state.page * pageSize, state.page * pageSize + pageSize);
+  }
+
+  const base = pool(view === 'followed');
+
+  if (view === 'random') return pick(base, pageSize);
+  if (view === 'all') return pick([...base].sort((a,b) => b.likes - a.likes).slice(0,12), pageSize).sort((a,b) => b.likes - a.likes);
+  return pick([...base].sort((a,b) => a.hours - b.hours).slice(0,12), pageSize).sort((a,b) => a.hours - b.hours);
+}
+
+function nav(){
+  document.querySelectorAll('.nav [data-view]').forEach(a => {
+    a.classList.toggle('active', a.dataset.view === state.view);
+  });
+}
+
+function row(post){
+  const own = post.user === 'you';
+  const hideLike = state.view === 'you';
+  const liked = state.liked.has(post.id);
+  return `<article class="item${hideLike ? ' no-like' : ''}">
+    ${hideLike ? '' : `<button type="button" class="like-box${liked ? ' liked' : ''}" data-action="like" data-id="${post.id}"${own ? ' disabled' : ''}>${liked ? 'liked' : 'like'}</button>`}
+    <div class="post-body">
+      <a href="#" class="title" title="${esc(post.title)}">${esc(post.title)}</a>
+      <div class="meta">
+        <span><strong data-like-count>${post.likes + (liked ? 1 : 0)}</strong> likes</span>
+        <span>by ${own ? '<strong>you</strong>' : `<a href="#" class="nick" data-user="${post.user}">@${post.user}</a>`}</span>
+        <span>${post.hours}h ago</span>
+        ${own ? '' : '<a href="#" class="action">report</a>'}
+      </div>
+    </div>
+  </article>`;
+}
+
+function footer(view){
+  if (view === 'you') {
+    return `<div class="panel">
+      <span class="panel-line">
+        <span><strong>you</strong> · rep ${users.you.reputation}</span>
+        <a href="#" class="action">export</a>
+        <a href="#" class="action">import</a>
+      </span>
+    </div>`;
+  }
+
+  if (profile(view)) {
+    const repGiven = state.repGiven.has(view);
+    const rep = users[view].reputation + (repGiven ? 1 : 0);
+
+    return `<div class="panel">
+      <span class="panel-line">
+        <span><a href="#" class="nick" data-user="${view}">@${view}</a> · rep <span data-rep-count>${rep}</span></span>
+        <button type="button" class="framed-action${repGiven ? ' given' : ''}" data-action="give-rep" data-user="${view}">${repGiven ? 'rep given' : 'give rep'}</button>
+        <a href="#" class="action" data-action="follow">${state.followed.has(view) ? 'unfollow' : 'follow'}</a>
+      </span>
+    </div>`;
+  }
+
+  return '';
+}
+
+function slider(){
+  return ['new','all','random','followed'].includes(state.view) ? `
+    <div class="range">
+      <div class="range-head">
+        <span>user reputation</span>
+        <output id="repval">${state.reputation}</output>
+      </div>
+      <input id="rep" type="range" min="0" max="1000" value="${state.reputation}">
+      <div class="scale"><span>0</span><span>1000</span></div>
+    </div>
+  ` : '';
+}
+
+function render(){
+  nav();
+  const feed = document.getElementById('feed');
+  const items = itemsFor(state.view);
+
+  if (state.view === 'home') {
+    feed.innerHTML = `
+      <section class="block empty home-note">
+        choose a feed, or open <a href="#" class="action" data-view="what">what</a> for the premise.
+      </section>
+    `;
+    return;
+  }
+
+  if (state.view === 'what') {
+    feed.innerHTML = `<section class="block what">${esc(items[0].title)}</section>`;
+    return;
+  }
+
+  if (!items.length) {
+    feed.innerHTML = `
+      <section class="block empty">
+        ${state.view === 'followed'
+          ? 'follow a few users to build this feed. the reputation filter still applies to follows.'
+          : 'no posts found here right now.'}
+        ${slider()}
+      </section>
+    `;
+    bindRange();
+    return;
+  }
+
+  const moreable = (state.view === 'you' || profile(state.view)) &&
+    (state.page + 1) * pageSize < users[state.view].posts.length;
+
+  feed.innerHTML = `
+    <section class="block">
+      <div class="list">${items.map(row).join('')}</div>
+      ${moreable ? '<a href="#" class="more" data-action="more">more</a>' : ''}
+      ${footer(state.view)}
+      ${slider()}
+    </section>
+  `;
+
+  bindRange();
+}
+
+function bindRange(){
+  const input = document.getElementById('rep');
+  if (!input) return;
+
+  input.addEventListener('input', e => {
+    state.reputation = +e.target.value;
+    const out = document.getElementById('repval');
+    if (out) out.value = state.reputation;
+  });
+
+  input.addEventListener('change', () => render());
+}
+
+function go(view){
+  state.view = view;
+  state.page = 0;
+  render();
+}
+
+document.addEventListener('click', e => {
+  const control = e.target.closest('button[data-action]');
+  if (control) {
+    e.preventDefault();
+    const {action,id} = control.dataset;
+
+    if (action === 'like') {
+      const liked = state.liked.has(id);
+      liked ? state.liked.delete(id) : state.liked.add(id);
+      control.classList.toggle('liked', !liked);
+      control.textContent = liked ? 'like' : 'liked';
+      const count = control.closest('.item')?.querySelector('[data-like-count]');
+      if (count) count.textContent = String(Number(count.textContent) + (liked ? -1 : 1));
+      return;
+    }
+
+    if (action === 'give-rep') {
+      const user = control.dataset.user;
+      const given = state.repGiven.has(user);
+      given ? state.repGiven.delete(user) : state.repGiven.add(user);
+      control.classList.toggle('given', !given);
+      control.textContent = given ? 'give rep' : 'rep given';
+      const count = control.closest('.panel')?.querySelector('[data-rep-count]');
+      if (count) count.textContent = String(Number(count.textContent) + (given ? -1 : 1));
+      return;
+    }
+  }
+
+  const a = e.target.closest('a');
+  if (a) {
+    const {view,user,action} = a.dataset;
+    if (!view && !user && !action) return;
+    e.preventDefault();
+
+    if (view) return go(view);
+    if (user) return go(user);
+    if (action === 'more') {
+      state.page++;
+      return render();
+    }
+    if (action === 'follow' && profile(state.view)) {
+      state.followed.has(state.view)
+        ? state.followed.delete(state.view)
+        : state.followed.add(state.view);
+      return render();
+    }
+  }
+});
+
+go('what');
+</script>
+</body>
+</html>
