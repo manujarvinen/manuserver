@@ -130,11 +130,6 @@ caligula burn -z none manuserver-*.iso</pre>
     Boot the PC from the stick and answer the same four questions. It has to
     start in UEFI mode with Secure Boot off — both are firmware settings.
   </p>
-  <p class="note">
-    There is no virtual machine to drive here, so the commands below do not
-    apply: power it on and it serves. <code>ssh</code> in to change anything,
-    and <code>sudo manuserver-tunnel</code> puts it on the internet.
-  </p>
 
   <h2>Running it in Virtual Machine</h2>
 <pre>manuserver               start it
@@ -146,6 +141,28 @@ manuserver backup mj     save the database to a file</pre>
   <p class="note">
     No window opens; it runs in the background, the way a server does. The site
     is at <a href="http://localhost:8080">localhost:8080</a>.
+  </p>
+
+  <h2>Running it in 64-bit PC</h2>
+  <p class="note">
+    Nothing to start. It logs itself in and brings its services up at boot, so
+    powering it on is the whole of it. Its own screen shows the address it has
+    on your network — that is where the site is, and where to <code>ssh</code>.
+  </p>
+<pre>ssh mj@192.168.1.50            open a terminal on it
+sudo manuserver-tunnel         put it on the public internet
+sudo manuserver-tunnel status  is the tunnel up?
+sudo manuserver-tunnel off     take it back off
+
+sudo -u postgres pg_dumpall --clean &gt; backup.sql</pre>
+  <p class="note">
+    <code>mj</code> and the password are the ones you gave the installer, not
+    your own computer's. That last line is the backup — copy the file off the
+    machine and you cannot lose the database.
+  </p>
+  <p class="note">
+    The <code>manuserver</code> command drives a virtual machine from outside,
+    so it is not on this machine. Everything here you do over <code>ssh</code>.
   </p>
 
   <h2>On the internet</h2>
