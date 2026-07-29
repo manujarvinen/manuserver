@@ -172,6 +172,25 @@ http {
             log_not_found off;
         }
 
+        # The typeface, served from here rather than from Google, so that
+        # loading a page tells nobody else that you did.
+        #
+        # A year, because a font does not change. If one ever does, rename the
+        # file — browsers hold this for as long as it says, and there is no way
+        # to call it back.
+        #
+        # The expires directive rather than add_header, deliberately: an
+        # add_header in a location replaces the ones set on the server instead
+        # of adding to them, and that would quietly drop nosniff and the rest
+        # for these requests.
+        #
+        # (No backticks in this heredoc. It is unquoted so that $DOC_ROOT
+        # expands, which means a backtick is a command substitution and bash
+        # runs whatever is inside it while writing the file.)
+        location /fonts/ {
+            expires 1y;
+        }
+
         # Dotfiles, including anything a stray .git would put here.
         location ~ /\. {
             deny all;

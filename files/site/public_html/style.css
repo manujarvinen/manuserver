@@ -6,12 +6,48 @@
  * base, a 920px column, and proportionally more air between rows. Nothing
  * about the structure changed.
  *
- * The reference pulled Inter from Google Fonts. That is one request per
- * visitor to a third party carrying their IP address, on a site whose entire
- * premise is that nobody is identified — so the webfont is gone and the stack
- * below uses whatever the machine already has. On most of them that is Inter
- * or something drawn from the same well.
+ * Geomini is served from this machine, out of fonts/. Linking it from Google
+ * would have been one line, and one request per visitor to a third party
+ * carrying their IP address — on a site whose whole premise is that nobody is
+ * identified. Two files and this block cost nothing and keep that true.
+ *
+ * Everything is greyscale except links, which are the one accent: bright
+ * golden orange, bold, with a little glow on the wordmark.
  */
+
+/*
+ * Geomini by FontBob / Carl's Type, under the SIL Open Font License 1.1, which
+ * is what permits it to sit here rather than being fetched from Google.
+ *
+ * One variable file per subset, covering the whole 200-800 weight range in a
+ * single download rather than one file per weight. The unicode-range lines are
+ * Google's own: a browser fetches latin-ext only if the page actually contains
+ * a character from it, which for most pages here means it never does.
+ *
+ * font-display: swap so text is readable in the fallback face immediately and
+ * never invisible while the font loads.
+ */
+@font-face {
+  font-family: Geomini;
+  font-style: normal;
+  font-weight: 200 800;
+  font-display: swap;
+  src: url(/fonts/geomini-latin-ext.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF,
+    U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020,
+    U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+  font-family: Geomini;
+  font-style: normal;
+  font-weight: 200 800;
+  font-display: swap;
+  src: url(/fonts/geomini-latin.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
 
 :root {
   --bg: #0b0b0b;
@@ -22,14 +58,29 @@
   --line: #1a1a1a;
   --accent: #bdbdbd;
   --warn: #d98b8b;
-  --maxw: min(920px, calc(100vw - 40px));
-  --font: Inter, "Inter var", -apple-system, BlinkMacSystemFont, "Segoe UI",
+
+  /* The only colour on the site. Everything clickable wears it. */
+  --link: #ffab1a;
+  --link-hover: #ffc95e;
+  --link-glow: rgba(255, 171, 26, .38);
+  --maxw: 920px;
+  --font: Geomini, Inter, -apple-system, BlinkMacSystemFont, "Segoe UI",
     Roboto, "Helvetica Neue", system-ui, sans-serif;
 }
 
 * { box-sizing: border-box }
 
 html, body { margin: 0; min-height: 100% }
+
+/*
+ * Reserve the scrollbar's width whether or not there is one.
+ *
+ * Without this the column shifts sideways by however wide the scrollbar is
+ * every time you move between a page that scrolls and one that does not — from
+ * a long feed to `what`, say — which reads as the site not being centred
+ * rather than as the scrollbar appearing.
+ */
+html { scrollbar-gutter: stable }
 
 body {
   background: var(--bg);
@@ -38,12 +89,30 @@ body {
   letter-spacing: 0;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  /* The breathing room at the edges, so .shell can be pure width and centre
+     itself with nothing to subtract. */
+  padding-inline: 20px;
 }
 
-a { color: inherit; text-decoration: none }
+/* Links are the accent, everywhere, without exception. Anything that is not a
+   link stays grey. */
+a {
+  color: var(--link);
+  font-weight: 700;
+  text-decoration: none;
+}
 
+a:hover { color: var(--link-hover) }
+
+/*
+ * The column, centred. max-width rather than width so it simply narrows on a
+ * small screen, and no vw units anywhere: 100vw counts the scrollbar as part
+ * of the viewport, so anything measured from it is wrong by a scrollbar on
+ * exactly the pages that have one.
+ */
 .shell {
-  width: var(--maxw);
+  width: 100%;
+  max-width: var(--maxw);
   margin: 0 auto;
   padding: 36px 0 72px;
 }
@@ -54,9 +123,12 @@ a { color: inherit; text-decoration: none }
 
 .brand {
   display: inline-block;
+  color: var(--link);
   font-size: 17px;
-  font-weight: 600;
+  font-weight: 800;
   letter-spacing: .01em;
+  /* The neon. Just on the wordmark — everywhere else it would be noise. */
+  text-shadow: 0 0 22px var(--link-glow);
 }
 
 .nav {
@@ -68,12 +140,11 @@ a { color: inherit; text-decoration: none }
 }
 
 .nav a {
-  color: var(--muted);
   transition: color .15s ease;
 }
 
-.nav a:hover { color: var(--text) }
-.nav a.active { color: var(--text) }
+/* The page you are on burns brighter than the ones you could go to. */
+.nav a.active { color: var(--link-hover) }
 
 .flash {
   margin: 0 0 22px;
@@ -123,14 +194,16 @@ a { color: inherit; text-decoration: none }
 
 .title {
   display: block;
-  color: var(--text);
   font-size: 17px;
-  font-weight: 500;
   line-height: 1.4;
   margin: 0 0 5px;
+  /* Titles come from YouTube and are not always words. One long unbroken
+     string would widen the column past the screen and take the centring with
+     it. */
+  overflow-wrap: anywhere;
 }
 
-.title:hover { color: #fff; text-decoration: underline }
+.title:hover { text-decoration: underline }
 
 .meta {
   display: flex;
@@ -144,8 +217,7 @@ a { color: inherit; text-decoration: none }
 
 .meta strong { font-weight: 500; color: var(--muted) }
 
-.nick { color: var(--muted) }
-.nick:hover { color: var(--text) }
+
 
 /* --- controls ------------------------------------------------------------ */
 
@@ -162,11 +234,12 @@ a { color: inherit; text-decoration: none }
   padding: 0;
   margin: 0;
   font: inherit;
-  color: var(--muted);
+  color: var(--link);
+  font-weight: 700;
   cursor: pointer;
 }
 
-.action:hover { color: var(--text) }
+.action:hover { color: var(--link-hover) }
 
 .inline { display: inline }
 
@@ -235,11 +308,8 @@ a { color: inherit; text-decoration: none }
 .more {
   display: inline-block;
   margin-top: 18px;
-  color: var(--muted);
   font-size: 13px;
 }
-
-.more:hover { color: var(--text) }
 
 /* --- reputation slider --------------------------------------------------- */
 
@@ -362,10 +432,9 @@ input[type=range] {
 @media (max-width: 640px) {
   body { font-size: 15px }
 
-  .shell {
-    width: min(920px, calc(100vw - 28px));
-    padding: 24px 0 48px;
-  }
+  body { padding-inline: 14px }
+
+  .shell { padding: 24px 0 48px }
 
   .nav {
     gap: 12px 16px;
