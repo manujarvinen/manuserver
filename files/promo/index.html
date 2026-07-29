@@ -182,8 +182,11 @@ sudo -u postgres pg_dumpall --clean &gt; backup.sql</pre>
       <strong>Add a site</strong>, enter your domain, choose the free plan.
     </li>
     <li>
-      Point your registrar at the two nameservers it gives you, and wait for
+      Point your registrar at the two nameservers it gives you and wait for
       <strong>Active</strong> — minutes to a day, and the only slow part.
+      <strong>This one is not optional:</strong> the record that points a
+      hostname at a tunnel only resolves inside Cloudflare's own DNS, so it
+      cannot be added at your registrar or in cPanel.
     </li>
     <li>
       <strong>Zero Trust → Networks → Tunnels → Create a tunnel</strong>,
@@ -195,12 +198,21 @@ sudo -u postgres pg_dumpall --clean &gt; backup.sql</pre>
     </li>
     <li>
       On the same tunnel add a <strong>Public Hostname</strong>: your domain,
-      type <code>HTTP</code>, URL <code>localhost:80</code>.
+      type <code>HTTP</code>, URL <code>localhost:80</code>. Cloudflare writes
+      the DNS record itself.
     </li>
   </ol>
   <p class="note">
     Then <code>manuserver tunnel</code> — or <code>sudo manuserver-tunnel</code>
-    on a PC — asks for the token, and you are live.
+    on a PC — asks for the token.
+  </p>
+  <p class="note">
+    <strong>Healthy is not the same as reachable.</strong> It only means the
+    tunnel connected. There is no public IP to visit — a tunnel is reached by
+    hostname and nothing else — so until a Public Hostname exists in an Active
+    zone, there is no address at all. To try it before the DNS move lands, run
+    <code>cloudflared tunnel --url http://localhost:80</code> on the server for
+    a throwaway <code>trycloudflare.com</code> address.
   </p>
 
   <h2>Security</h2>

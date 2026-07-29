@@ -248,23 +248,37 @@ Cloudflare, and visitors are passed back down that connection. It is free, and
 `cloudflared` is already installed on your machine, switched off, waiting for a
 token.
 
-### 1. Get a token, in a browser
+### 1. Move the domain to Cloudflare
+
+**This step is not optional and cannot be done anywhere else.** A tunnel is
+reached by hostname, and the record that points a hostname at a tunnel only
+resolves inside Cloudflare's own DNS. You cannot add it at your registrar, and
+you cannot add it in cPanel — so `tastehopping.com` has to be served by
+Cloudflare's nameservers before any of the rest works.
 
 1. Free account at [cloudflare.com](https://cloudflare.com) → **Add a site** →
    `tastehopping.com`, Free plan.
 2. It gives you **two nameservers**. Replace the ones at your registrar with
    those. If the domain was already serving anything, check the DNS records
-   Cloudflare copied over first, or that website and its email will break. Then
-   wait for **Active** — minutes to a day. This is the slow part and the only
-   annoying one.
-3. **Zero Trust → Networks → Tunnels → Create a tunnel** → *Cloudflared*, name
+   Cloudflare copied over first, or that website and its email will break.
+3. Wait until Cloudflare says **Active**. Minutes to a day. This is the slow
+   part and the only annoying one, and nothing below works until it is done —
+   Cloudflare is now where you edit this domain's DNS, not cPanel.
+
+### 2. Make the tunnel
+
+4. **Zero Trust → Networks → Tunnels → Create a tunnel** → *Cloudflared*, name
    it `manuserver`, save.
-4. Copy the long string starting `eyJhIjoi` out of the command it shows you.
+5. Copy the long string starting `eyJhIjoi` out of the command it shows you.
    That is the token. Treat it like a password.
-5. On the same tunnel, add a **Public Hostname**: leave the subdomain empty,
+6. On the same tunnel, add a **Public Hostname**: leave the subdomain empty,
    domain `tastehopping.com`, service type `HTTP`, URL `localhost:80`.
 
-### 2. Turn it on
+Cloudflare writes the DNS record itself when you save that hostname. There is
+nothing to add by hand, which is the other reason the zone has to be theirs
+first.
+
+### 3. Turn it on
 
 ```sh
 manuserver tunnel        # virtual machine
@@ -274,6 +288,24 @@ sudo manuserver-tunnel   # real server, over ssh
 Paste the token at the prompt — nothing appears as you paste, which is
 deliberate. It tells you within a few seconds whether the tunnel came up. On a
 real server, its address is on its own screen, next to **on this network**.
+
+**"Healthy" in Cloudflare's dashboard does not mean the site is reachable.** It
+means `cloudflared` connected to Cloudflare and nothing more. A tunnel has no
+public IP address — there is no number to visit, ever. Until a Public Hostname
+exists in an Active zone, there is no address at all.
+
+To see it working before the DNS move lands, run a throwaway tunnel on the
+server by hand:
+
+```sh
+sudo systemctl stop manuserver-tunnel
+cloudflared tunnel --url http://localhost:80
+```
+
+That prints a random `https://….trycloudflare.com` address that works
+immediately, with no account and no domain. It is for testing only — a new
+address every run, and rate limited. `Ctrl-C`, then
+`sudo systemctl start manuserver-tunnel`, to put things back.
 
 `https://tastehopping.com` now works from anywhere, with a valid
 certificate. `tunnel status` and `tunnel off` do what they say; `off` deletes
