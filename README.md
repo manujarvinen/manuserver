@@ -1,10 +1,10 @@
 # manuserver
 
-**[The quickstart](https://www.manujarvinen.com/manuserver)** — the short
-version, on the website. Start here.
-
 A small Arch Linux server, the installer that puts it on a machine, and the
 website it runs. One script drives all three.
+
+**[The quickstart](https://www.manujarvinen.com/manuserver)** — the short
+version, on the website. Start here.
 
 The website is **tastehopping**: an anonymous place to keep the YouTube videos
 other people found worth keeping, and to vote on them. No email, no password,
