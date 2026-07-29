@@ -27,6 +27,14 @@ function dispatch(): void
 
     $rep = (int) ($_SESSION['rep'] ?? DEFAULT_REP);
 
+    // Being here at all is what keeps an account from being pruned. Cheap:
+    // touch_activity only writes once a day per account.
+    $viewer = current_user_id();
+
+    if ($viewer !== null) {
+        touch_activity($viewer);
+    }
+
     if (!$isPost) {
         $view = ltrim($path, '/');
 

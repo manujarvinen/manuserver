@@ -19,6 +19,11 @@
 --
 -- The consequence, and it is deliberate: the server cannot show you your key
 -- a second time. Lose it and the account is gone.
+-- last_seen is what decides whether an account still exists: files/deploy/
+-- prune.sh deletes anything untouched for three months. It has to mean "last
+-- used", not "last logged in" — a session cookie lasts a year, so somebody who
+-- visits daily may never log in twice, and pruning on login time would delete
+-- the most active accounts first. See touch_activity() in app/auth.php.
 CREATE TABLE IF NOT EXISTS users (
     id         bigserial   PRIMARY KEY,
     name       text        NOT NULL UNIQUE
@@ -28,6 +33,8 @@ CREATE TABLE IF NOT EXISTS users (
     created_at timestamptz NOT NULL DEFAULT now(),
     last_seen  timestamptz NOT NULL DEFAULT now()
 );
+
+CREATE INDEX IF NOT EXISTS users_last_seen_idx ON users (last_seen);
 
 -- --- saved videos ----------------------------------------------------------
 --

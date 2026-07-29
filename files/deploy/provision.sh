@@ -231,6 +231,48 @@ ExecStart=/bin/bash $SITE_DIR/files/deploy/db-setup.sh
 WantedBy=multi-user.target
 UNIT
 
+# --- pruning dormant accounts -------------------------------------------------
+#
+# An account nobody has used for three months is deleted, along with everything
+# it saved. The site says so before you join; there is no email here, so nobody
+# can be warned afterwards.
+#
+# A timer rather than something the site does while serving a page: it has to
+# run on a machine nobody is using, which is precisely when there are no
+# requests to hang it off.
+
+step 'installing the account pruner'
+
+write /etc/systemd/system/manuserver-prune.service <<UNIT
+[Unit]
+Description=manuserver: delete accounts unused for three months
+Documentation=file://$SITE_DIR/files/deploy/prune.sh
+After=postgresql.service
+Requires=postgresql.service
+ConditionPathExists=$SITE_DIR/files/deploy/prune.sh
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash $SITE_DIR/files/deploy/prune.sh
+UNIT
+
+write /etc/systemd/system/manuserver-prune.timer <<'UNIT'
+[Unit]
+Description=manuserver: prune dormant accounts daily
+
+[Timer]
+OnCalendar=daily
+# Catch up after downtime rather than skipping. A server that was off for a
+# week should still prune when it comes back.
+Persistent=true
+# Nothing depends on the exact minute, and this keeps it off the stroke of
+# midnight along with everything else on the machine.
+RandomizedDelaySec=1h
+
+[Install]
+WantedBy=timers.target
+UNIT
+
 # --- ssh ---------------------------------------------------------------------
 #
 # The ISO enables sshd with Arch's defaults, which on a real home server means
@@ -324,7 +366,7 @@ run ln -sfn "$SITE_DIR/files/deploy/tunnel.sh" /usr/local/bin/manuserver-tunnel
 step 'enabling services'
 
 run systemctl enable nginx.service php-fpm.service postgresql.service \
-  manuserver-db.service manuserver-tunnel.service
+  manuserver-db.service manuserver-tunnel.service manuserver-prune.timer
 
 # --- the console message ----------------------------------------------------
 #

@@ -23,5 +23,9 @@ declare(strict_types=1);
     <button type="submit" class="framed-action">make me an account</button>
   </form>
 
+  <p class="note">accounts that go three months without being used are deleted, along with
+  everything they saved. there is no email here, so there is no way to warn you first —
+  hence saying it now. visiting is enough to keep one alive.</p>
+
   <p class="note">already have a key? <a class="action" href="/login">sign in with it</a>.</p>
 </section>

@@ -11,4 +11,8 @@ it and cannot give it back.</p>
 
 <p>reputation is a position, not a score: 0 to 1000 by where you stand against everyone else. the slider
 under each feed picks the part of that range you want to hear from.</p>
+
+<p>an account that goes three months without being used is deleted, and everything it saved goes with
+it. this place is meant to be disposable. just visiting keeps yours alive, and a new one is always one
+click away.</p>
 </section>

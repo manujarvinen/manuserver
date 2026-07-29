@@ -202,3 +202,25 @@ function touch_last_seen(int $userId): void
 {
     execute('UPDATE users SET last_seen = now() WHERE id = :id', ['id' => $userId]);
 }
+
+/**
+ * Mark this account as still in use.
+ *
+ * An account untouched for three months is deleted (files/deploy/prune.sh), so
+ * this is what keeps a live one alive. It has to run on activity rather than on
+ * login: the session cookie lasts a year, so a regular visitor may never log in
+ * a second time, and pruning on login time would remove the most engaged
+ * accounts while leaving the ones that joined and left.
+ *
+ * The WHERE clause is the throttle. Without it this would be a write on every
+ * page view; with it, one per account per day, and the rest match no rows and
+ * cost an index lookup.
+ */
+function touch_activity(int $userId): void
+{
+    execute(
+        "UPDATE users SET last_seen = now()
+          WHERE id = :id AND last_seen < now() - interval '1 day'",
+        ['id' => $userId]
+    );
+}
