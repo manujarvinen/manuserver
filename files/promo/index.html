@@ -105,7 +105,7 @@
     15 GB free.
   </p>
 
-  <h2>How to use</h2>
+  <h2>How to use in Virtual Machine</h2>
 <pre>git clone https://github.com/manujarvinen/manuserver.git
 cd manuserver
 ./manuserver.sh build_iso     # ~20 min
@@ -117,7 +117,26 @@ cd manuserver
     clone. Neither is needed to run the server.
   </p>
 
-  <h2>Running it</h2>
+  <h2>How to use in 64-bit PC</h2>
+  <p class="note">
+    Build the <code>.iso</code> as above, then write it to a whole USB disk —
+    that disk is completely overwritten. Caligula lists the disks and you pick
+    one, so there is no device path to mistype. balenaEtcher does the same on
+    Mac or Windows.
+  </p>
+<pre>sudo pacman -S caligula
+caligula burn -z none manuserver-*.iso</pre>
+  <p class="note">
+    Boot the PC from the stick and answer the same four questions. It has to
+    start in UEFI mode with Secure Boot off — both are firmware settings.
+  </p>
+  <p class="note">
+    There is no virtual machine to drive here, so the commands below do not
+    apply: power it on and it serves. <code>ssh</code> in to change anything,
+    and <code>sudo manuserver-tunnel</code> puts it on the internet.
+  </p>
+
+  <h2>Running it in Virtual Machine</h2>
 <pre>manuserver               start it
 manuserver vm_stop       shut it down
 manuserver vm_status     is it running?
