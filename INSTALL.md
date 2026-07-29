@@ -245,30 +245,31 @@ token.
 ### 1. Get a token, in a browser
 
 1. Free account at [cloudflare.com](https://cloudflare.com) → **Add a site** →
-   `manujarvinen.com`, Free plan.
+   `tastehopping.com`, Free plan.
 2. It gives you **two nameservers**. Replace the ones at your registrar with
-   those. Check the DNS records Cloudflare copied over first, or your existing
-   website and email will break. Then wait for **Active** — minutes to a day.
-   This is the slow part and the only annoying one.
+   those. If the domain was already serving anything, check the DNS records
+   Cloudflare copied over first, or that website and its email will break. Then
+   wait for **Active** — minutes to a day. This is the slow part and the only
+   annoying one.
 3. **Zero Trust → Networks → Tunnels → Create a tunnel** → *Cloudflared*, name
    it `manuserver`, save.
 4. Copy the long string starting `eyJhIjoi` out of the command it shows you.
    That is the token. Treat it like a password.
-5. On the same tunnel, add a **Public Hostname**: subdomain `manuserver`,
-   domain `manujarvinen.com`, service type `HTTP`, URL `localhost:80`.
+5. On the same tunnel, add a **Public Hostname**: leave the subdomain empty,
+   domain `tastehopping.com`, service type `HTTP`, URL `localhost:80`.
 
 ### 2. Turn it on
 
 ```sh
-manuserver tunnel   # virtual machine
-sudo manuserver-tunnel             # real server, over ssh
+manuserver tunnel        # virtual machine
+sudo manuserver-tunnel   # real server, over ssh
 ```
 
 Paste the token at the prompt — nothing appears as you paste, which is
 deliberate. It tells you within a few seconds whether the tunnel came up. On a
 real server, its address is on its own screen, next to **on this network**.
 
-`https://manuserver.manujarvinen.com` now works from anywhere, with a valid
+`https://tastehopping.com` now works from anywhere, with a valid
 certificate. `tunnel status` and `tunnel off` do what they say; `off` deletes
 the token and the site keeps running locally.
 
