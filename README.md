@@ -1,5 +1,8 @@
 # manuserver
 
+**[The quickstart](https://www.manujarvinen.com/manuserver)** — the short
+version, on the website. Start here.
+
 A small Arch Linux server, the installer that puts it on a machine, and the
 website it runs. One script drives all three.
 
@@ -29,8 +32,6 @@ manuserver site_dev     # run the website here instead, no VM involved
 
 `./manuserver.sh --help` lists the rest.
 
-- **[The quickstart](https://www.manujarvinen.com/manuserver)** — the short
-  version, on the website. Start here.
 - **[INSTALL.md](INSTALL.md)** — every step in plain English, including
   Cloudflare.
 - **[CLAUDE.md](CLAUDE.md)** — how it is put together, and why.
