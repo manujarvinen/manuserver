@@ -139,12 +139,17 @@ a:hover { color: var(--link-hover) }
   padding: 0;
 }
 
+/* The tabs stay grey. They are on every page, so in the accent they would be
+   a row of shouting above everything else — and the wordmark just above them
+   already carries the colour. The page you are on is the bright one. */
 .nav a {
+  color: var(--muted);
+  font-weight: 400;
   transition: color .15s ease;
 }
 
-/* The page you are on burns brighter than the ones you could go to. */
-.nav a.active { color: var(--link-hover) }
+.nav a:hover,
+.nav a.active { color: var(--text) }
 
 .flash {
   margin: 0 0 22px;
@@ -192,9 +197,13 @@ a:hover { color: var(--link-hover) }
 
 .post-body { min-width: 0 }
 
+/* Grey, not the accent. These are the bulk of every feed, and eight bright
+   orange lines would stop being an accent and start being the background. */
 .title {
   display: block;
+  color: var(--text);
   font-size: 17px;
+  font-weight: 500;
   line-height: 1.4;
   margin: 0 0 5px;
   /* Titles come from YouTube and are not always words. One long unbroken
@@ -203,7 +212,7 @@ a:hover { color: var(--link-hover) }
   overflow-wrap: anywhere;
 }
 
-.title:hover { text-decoration: underline }
+.title:hover { color: #fff; text-decoration: underline }
 
 .meta {
   display: flex;
