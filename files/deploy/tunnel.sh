@@ -50,7 +50,8 @@ cmd_status() {
   printf '\n'
   systemctl status --no-pager --lines=8 "$SERVICE" || true
   printf '\nthe public address is whatever hostname you attached to this tunnel\n'
-  printf 'in the cloudflare dashboard, under the tunnel'"'"'s public hostnames.\n'
+  printf 'in the cloudflare dashboard, under Networking -> Tunnels -> Routes.\n'
+  printf 'a connected tunnel with no route has no address at all.\n'
 }
 
 # --- off ---------------------------------------------------------------------
@@ -107,9 +108,12 @@ cmd_on() {
 
   Paste the tunnel token from Cloudflare.
 
-  Zero Trust -> Networks -> Tunnels -> your tunnel -> Configure.
-  It shows an install command containing "--token eyJhIjoi...". The token is
-  that long string. Pasting the whole command is fine too.
+  Networking -> Tunnels -> your tunnel. It shows an install command containing
+  a long string starting "eyJhIjoi". That is the token; pasting the whole
+  command is fine too.
+
+  Afterwards, give the tunnel an address: Routes -> Add route -> Published
+  application. Without one it connects and serves nothing.
 
   Nothing is shown as you paste. Press enter when done.
 

@@ -189,17 +189,21 @@ sudo -u postgres pg_dumpall --clean &gt; backup.sql</pre>
       cannot be added at your registrar or in cPanel.
     </li>
     <li>
-      <strong>Zero Trust → Networks → Tunnels → Create a tunnel</strong>,
-      choose <em>Cloudflared</em>, name it, save.
+      <strong>Networking → Tunnels → Create a tunnel</strong>, name it, and
+      select <strong>Create Tunnel</strong>.
     </li>
     <li>
-      Copy the long <code>eyJhIjoi…</code> string it shows. That is the token —
-      treat it like a password.
+      It offers an install command. You do not run it — the long
+      <code>eyJhIjoi…</code> string inside it is the token, and that is all you
+      need. Treat it like a password.
     </li>
     <li>
-      On the same tunnel add a <strong>Public Hostname</strong>: your domain,
-      type <code>HTTP</code>, URL <code>localhost:80</code>. Cloudflare writes
-      the DNS record itself.
+      Give the token to <code>manuserver tunnel</code> first, so the tunnel is
+      connected. Then open it in <strong>Networking → Tunnels</strong> and use
+      the <strong>Routes</strong> tab → <strong>Add route</strong> →
+      <strong>Published application</strong>: pick your domain, and set
+      <strong>Service URL</strong> to <code>http://localhost:80</code>.
+      Cloudflare writes the DNS record itself.
     </li>
   </ol>
   <p class="note">
@@ -209,8 +213,8 @@ sudo -u postgres pg_dumpall --clean &gt; backup.sql</pre>
   <p class="note">
     <strong>Healthy is not the same as reachable.</strong> It only means the
     tunnel connected. There is no public IP to visit — a tunnel is reached by
-    hostname and nothing else — so until a Public Hostname exists in an Active
-    zone, there is no address at all. To try it before the DNS move lands, run
+    hostname and nothing else — so until a route exists in an Active zone, there
+    is no address at all. To try it before the DNS move lands, run
     <code>cloudflared tunnel --url http://localhost:80</code> on the server for
     a throwaway <code>trycloudflare.com</code> address.
   </p>

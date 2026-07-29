@@ -265,18 +265,13 @@ Cloudflare's nameservers before any of the rest works.
    part and the only annoying one, and nothing below works until it is done —
    Cloudflare is now where you edit this domain's DNS, not cPanel.
 
-### 2. Make the tunnel
+### 2. Make the tunnel and get its token
 
-4. **Zero Trust → Networks → Tunnels → Create a tunnel** → *Cloudflared*, name
-   it `manuserver`, save.
-5. Copy the long string starting `eyJhIjoi` out of the command it shows you.
-   That is the token. Treat it like a password.
-6. On the same tunnel, add a **Public Hostname**: leave the subdomain empty,
-   domain `tastehopping.com`, service type `HTTP`, URL `localhost:80`.
-
-Cloudflare writes the DNS record itself when you save that hostname. There is
-nothing to add by hand, which is the other reason the zone has to be theirs
-first.
+4. **Networking → Tunnels → Create a tunnel**. Name it `manuserver` and select
+   **Create Tunnel**.
+5. It offers you an install command for your operating system. You do not run
+   it — the long string starting `eyJhIjoi` inside it is the token, and that is
+   all you need. Copy it, and treat it like a password.
 
 ### 3. Turn it on
 
@@ -291,7 +286,7 @@ real server, its address is on its own screen, next to **on this network**.
 
 **"Healthy" in Cloudflare's dashboard does not mean the site is reachable.** It
 means `cloudflared` connected to Cloudflare and nothing more. A tunnel has no
-public IP address — there is no number to visit, ever. Until a Public Hostname
+public IP address — there is no number to visit, ever. Until a route
 exists in an Active zone, there is no address at all.
 
 To see it working before the DNS move lands, run a throwaway tunnel on the
@@ -307,9 +302,24 @@ immediately, with no account and no domain. It is for testing only — a new
 address every run, and rate limited. `Ctrl-C`, then
 `sudo systemctl start manuserver-tunnel`, to put things back.
 
-`https://tastehopping.com` now works from anywhere, with a valid
-certificate. `tunnel status` and `tunnel off` do what they say; `off` deletes
-the token and the site keeps running locally.
+### 4. Point the domain at it
+
+Only now, with the tunnel connected, does it get an address.
+
+6. Back in **Networking → Tunnels**, open your tunnel and go to the **Routes**
+   tab → **Add route** → **Published application**.
+7. Leave the subdomain blank for the bare domain, choose `tastehopping.com`
+   from the **Domain** dropdown, and set **Service URL** to
+   `http://localhost:80`. Save.
+
+That dropdown only lists domains that are an **active zone in your Cloudflare
+account** — which is step 1 doing its work, and why there is no way to skip it.
+Saving the route makes Cloudflare write the proxied CNAME into the zone itself;
+there is nothing to add by hand, in cPanel or anywhere else.
+
+`https://tastehopping.com` now works from anywhere, with a valid certificate.
+Afterwards `tunnel status` and `tunnel off` do what they say; `off` deletes the
+token and the site keeps running locally.
 
 - Only that one hostname and port are public. SSH stays unreachable.
 - The server has to be running, or visitors get a Cloudflare error page.
