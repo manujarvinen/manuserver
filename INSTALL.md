@@ -1,5 +1,11 @@
 # How to install manuserver
 
+> This is the elaborate documentation. Feel free to start with checking the
+> quickstart guide on the website:
+> <https://www.manujarvinen.com/manuserver>
+>
+> If it lacks any info you need, come back here.
+
 Follow these steps in order. You need a computer running Arch Linux and about
 an hour, most of which is waiting.
 
