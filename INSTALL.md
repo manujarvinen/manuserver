@@ -177,6 +177,18 @@ Restoring replaces what is on the server, so it asks you to confirm first.
 
 Both commands ask for the server password, and both need the server running.
 
+**On a real computer** there is no `manuserver` command to do this for you, so
+it is Postgres directly, over `ssh`:
+
+```sh
+sudo -u postgres pg_dumpall --clean > backup.sql   # save it
+sudo -u postgres psql -f backup.sql                # put it back
+```
+
+Copy that file off the machine afterwards — a backup sitting on the disk it is
+a backup of is not one. Restoring replaces everything currently in the
+database, and nothing asks you to confirm.
+
 ## Careful with `vm_install`
 
 Running `vm_install` again wipes the virtual machine and starts from scratch — the

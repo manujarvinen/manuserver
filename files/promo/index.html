@@ -139,7 +139,8 @@ manuserver vm_stop       shut it down
 manuserver vm_status     is it running?
 manuserver ssh mj        open a terminal on it
 manuserver tunnel        put it on the public internet
-manuserver backup mj     save the database to a file</pre>
+manuserver backup mj     save the database to a file
+manuserver restore       put the newest saved one back</pre>
   <p class="note">
     No window opens; it runs in the background, the way a server does. The site
     is at <a href="http://localhost:8080">localhost:8080</a>.
@@ -159,11 +160,12 @@ sudo manuserver-tunnel         put it on the public internet
 sudo manuserver-tunnel status  is the tunnel up?
 sudo manuserver-tunnel off     take it back off
 
-sudo -u postgres pg_dumpall --clean &gt; backup.sql</pre>
+sudo -u postgres pg_dumpall --clean &gt; backup.sql   save the database
+sudo -u postgres psql -f backup.sql                 put it back</pre>
   <p class="note">
     <code>mj</code> and the password are the ones you gave the installer, not
-    your own computer's. That last line is the backup — copy the file off the
-    machine and you cannot lose the database.
+    your own computer's. Copy that backup file off the machine and you cannot
+    lose the database. Putting one back replaces everything currently in it.
   </p>
   <p class="note">
     The <code>manuserver</code> command drives a virtual machine from outside,
