@@ -424,12 +424,29 @@ cmd_vm_status() {
 
 # A rebuilt VM reuses the port with a different host key, which otherwise trips
 # the known_hosts warning every single time.
+# One authentication per command, rather than one per round trip.
+#
+# A backup makes four separate connections — does pg_dumpall exist, take the
+# dump, fetch it, delete the copy — and without multiplexing every one of them
+# asks for the password again. ControlMaster opens the first as a master and
+# lets the rest ride inside it, so a backup asks once. ControlPersist keeps it
+# open briefly afterwards, so a second command typed straight after is free
+# too.
+#
+# %C is a hash of user, host and port. A unix socket path cannot exceed about
+# a hundred characters, and the literal form (%r@%h:%p) plus a home directory
+# gets uncomfortably close.
 ssh_opts() {
+  mkdir -p "$DATA_HOME"
+
   printf '%s\n' \
     -p "$SSH_PORT" \
     -o StrictHostKeyChecking=no \
     -o UserKnownHostsFile=/dev/null \
-    -o LogLevel=ERROR
+    -o LogLevel=ERROR \
+    -o ControlMaster=auto \
+    -o ControlPath="$DATA_HOME/ssh-%C" \
+    -o ControlPersist=30s
 }
 
 cmd_ssh() {

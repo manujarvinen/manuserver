@@ -175,7 +175,19 @@ manuserver restore ~/Downloads/manuserver-2026-07-28-2101.sql
 
 Restoring replaces what is on the server, so it asks you to confirm first.
 
-Both commands ask for the server password, and both need the server running.
+Both need the server running, and both ask for the server password twice: once
+for `ssh` and once for `sudo` on the far end. That is the whole of it — the
+connection is reused for the several round trips a backup takes, rather than
+authenticating again for each.
+
+To stop the `ssh` half asking at all, copy a key over once:
+
+```sh
+ssh-copy-id -p 2222 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null mj@localhost
+```
+
+`sudo` still asks, which is correct — it is what stops anyone who finds your
+terminal unlocked from reading the database out of the machine.
 
 **On a real computer** there is no `manuserver` command to do this for you, so
 it is Postgres directly, over `ssh`:
