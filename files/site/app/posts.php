@@ -349,6 +349,34 @@ function reputation_of(int $userId): int
     return (int) ($row['reputation'] ?? 0);
 }
 
+/** How many accounts are ranked at all — those that have saved something. */
+function ranked_user_count(): int
+{
+    static $count = null;
+
+    if ($count === null) {
+        $row = query_one('SELECT count(*) AS n FROM user_reputation');
+        $count = (int) ($row['n'] ?? 0);
+    }
+
+    return $count;
+}
+
+/**
+ * Reputation as it should appear on a page, unit included.
+ *
+ * Returns the whole phrase rather than a number so that the caller has nothing
+ * to decide and the two cases cannot be glued together into "new rep". The
+ * JSON the rep button gets back carries this same string, so the page and the
+ * script can never disagree about which one is in force.
+ */
+function reputation_display(int $reputation): string
+{
+    return ranked_user_count() < REPUTATION_MIN_POPULATION
+        ? 'new'
+        : $reputation . ' rep';
+}
+
 /** Reporting is one-way. There is no unreport, so there is nothing to game. */
 function report_post(int $postId, int $userId): void
 {

@@ -22,6 +22,18 @@ const REPORT_THRESHOLD = 3;
 // Rows per feed page.
 const PAGE_SIZE = 8;
 
+// How many ranked accounts there have to be before a reputation is shown.
+//
+// Reputation is a percentile, so the endpoints are always occupied: whoever
+// leads is at 1000 whether they lead by one like or ten thousand. With two
+// accounts, a single like puts someone at the top of the scale, which reads as
+// a broken number rather than a true one.
+//
+// Below this many, profiles say "new" instead. The percentile is still
+// computed and the slider still filters on it — a position among four people is
+// a fine thing to sort by and a silly thing to print.
+const REPUTATION_MIN_POPULATION = 10;
+
 /**
  * Load KEY=value lines into the environment, without overriding anything the
  * process was already given. Deliberately not a full dotenv parser — it reads

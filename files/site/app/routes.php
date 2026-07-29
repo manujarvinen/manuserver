@@ -407,7 +407,12 @@ function do_rep(): never
     $given = toggle_rep((int) $user['id'], (int) $subject['id']);
 
     if (wants_json()) {
-        send_json(['given' => $given, 'reputation' => reputation_of((int) $subject['id'])]);
+        send_json([
+            'given' => $given,
+            // The rendered phrase, not the number: the page may be showing
+            // "new" instead, and the script must not undo that.
+            'reputation' => reputation_display(reputation_of((int) $subject['id'])),
+        ]);
     }
 
     redirect(safe_back('/u/' . $subject['name']));

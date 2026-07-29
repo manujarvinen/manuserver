@@ -46,14 +46,14 @@ $canVote = $signedIn && has_saved_anything((int) current_user()['id']);
   <div class="panel">
     <span class="panel-line">
       <?php if ($self): ?>
-        <span><strong>you</strong> · <span data-rep-count><?= (int) $profile['reputation'] ?></span> rep · <?= (int) $total ?> saved</span>
+        <span><strong>you</strong> · <span data-rep-count><?= h(reputation_display((int) $profile['reputation'])) ?></span> · <?= (int) $total ?> saved</span>
         <a class="action" href="/export">export</a>
         <form method="post" action="/logout" class="inline">
           <?= csrf_field() ?>
           <button type="submit" class="action">sign out</button>
         </form>
       <?php else: ?>
-        <span>@<?= h($name) ?> · <span data-rep-count><?= (int) $profile['reputation'] ?></span> rep · <?= (int) $total ?> saved</span>
+        <span>@<?= h($name) ?> · <span data-rep-count><?= h(reputation_display((int) $profile['reputation'])) ?></span> · <?= (int) $total ?> saved</span>
 
         <?php if ($signedIn): ?>
           <?php if ($canVote): ?>
