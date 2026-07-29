@@ -112,10 +112,10 @@ cmd_on() {
   a long string starting "eyJhIjoi". That is the token; pasting the whole
   command is fine too.
 
-  Afterwards, give the tunnel an address: open the tunnel itself, then its own
-  Routes tab -> Add route -> Published application. Not Networking -> Routes,
-  which is a different page for private networks. Without a route the tunnel
-  connects and serves nothing.
+  Afterwards, give the tunnel an address: Networks -> Tunnels & Mesh -> your
+  tunnel -> Published application routes. Service type HTTP, URL localhost:80.
+  Not Networks -> Routes in the menu, which is a different thing for private
+  networks. Without a route the tunnel connects and serves nothing.
 
   Nothing is shown as you paste. Press enter when done.
 

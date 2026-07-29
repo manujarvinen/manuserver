@@ -306,23 +306,35 @@ address every run, and rate limited. `Ctrl-C`, then
 
 Only now, with the tunnel connected, does it get an address.
 
-6. Go to **Networking → Tunnels** and **click your tunnel's name** to open it.
-   On *its* **Routes** tab, select **Add route** → **Published application**.
-7. Under **Hostname**, leave the subdomain blank for the bare domain and choose
-   `tastehopping.com` from the dropdown. Set **Service URL** to
-   `http://localhost:80`. Select **Add route**.
+6. Go to **Networks → Tunnels & Mesh**, click your tunnel, and open
+   **Published application routes**. Add one.
+7. Fill it in:
 
-> **There are two pages called Routes and only one of them is this.**
-> **Networking → Routes** — the one in the left-hand menu, with the CIDR and
-> Hostname routes tabs — is for reaching private IP ranges through the WARP
-> client. It has no option for publishing a website, and nothing you do there
-> will help. The Routes tab you want appears only after you open an individual
-> tunnel.
+   | Field | Value |
+   | --- | --- |
+   | Subdomain | *leave empty* |
+   | Domain | `tastehopping.com` |
+   | Path | *leave empty* — matches every path |
+   | Service · Type | `HTTP` |
+   | Service · URL | `localhost:80` |
 
-That dropdown only lists domains that are an **active zone in your Cloudflare
-account** — which is step 1 doing its work, and why there is no way to skip it.
-Saving the route makes Cloudflare write the proxied CNAME into the zone itself;
+   The **Full hostname** line under the two boxes should read
+   `tastehopping.com`. Save.
+
+> **Port 80, not the 8080 the placeholder suggests.** `cloudflared` runs on the
+> server, where nginx listens on 80. The 8080 you use on your own computer is
+> the virtual machine's port forward, and the tunnel never sees it.
+
+The **Domain** dropdown only lists domains that are an **active zone in your
+Cloudflare account** — which is step 1 doing its work, and why there is no way
+to skip it. Saving the route makes Cloudflare write the proxied CNAME itself;
 there is nothing to add by hand, in cPanel or anywhere else.
+
+> **Not the Routes page in the left-hand menu.** `Networks → Routes`, with its
+> CIDR and Hostname tabs, is for reaching private IP ranges through the WARP
+> client. Every form there carries a "requires traffic to pass via Cloudflare
+> Gateway" banner, and none of them can publish a website. Published
+> application routes live *inside* a tunnel, not in that menu.
 
 `https://tastehopping.com` now works from anywhere, with a valid certificate.
 Afterwards `tunnel status` and `tunnel off` do what they say; `off` deletes the

@@ -199,13 +199,13 @@ sudo -u postgres pg_dumpall --clean &gt; backup.sql</pre>
     </li>
     <li>
       Give the token to <code>manuserver tunnel</code> first, so the tunnel is
-      connected. Then <strong>Networking → Tunnels</strong>, click the tunnel to
-      open it, and on <em>its own</em> <strong>Routes</strong> tab choose
-      <strong>Add route → Published application</strong>: pick your domain, and
-      set <strong>Service URL</strong> to <code>http://localhost:80</code>.
-      Cloudflare writes the DNS record itself.
-      <br>Not the <strong>Networking → Routes</strong> page in the side menu —
-      that one is for private networks and cannot publish a site.
+      connected. Then <strong>Networks → Tunnels &amp; Mesh</strong>, click your
+      tunnel, and open <strong>Published application routes</strong>. Leave
+      Subdomain and Path empty, pick your domain, and set the service to type
+      <code>HTTP</code>, URL <code>localhost:80</code> — port 80, not the 8080
+      in the placeholder. Cloudflare writes the DNS record itself.
+      <br>Not <strong>Networks → Routes</strong> in the side menu; that one is
+      for private networks and cannot publish a site.
     </li>
   </ol>
   <p class="note">
