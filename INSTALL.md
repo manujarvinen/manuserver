@@ -16,19 +16,19 @@ needs.
 
 ```sh
 git clone git@github-manujarvinen:manujarvinen/manuserver.git
-cd manuserver/manuserver_bootable_iso
+cd manuserver
 ```
 
 ## Step 2: Build the ISO
 
 ```sh
-./build_manuserver_iso.sh
+./manuserver.sh build_iso
 ```
 
 This takes about 20 minutes. It will ask for your password, because it needs
 administrator rights.
 
-The finished file appears in the `out/` folder.
+The finished `.iso` appears right next to `manuserver.sh`, in the folder you cloned.
 
 **If it says you were added to the `kvm` group:** log out of your computer and
 log back in before doing step 3. If you skip this, everything still works, but
@@ -37,7 +37,7 @@ the virtual machine will be very slow.
 ## Step 3: Install it into a virtual machine
 
 ```sh
-./run-manuserver-in-vm.sh install
+./manuserver.sh vm_install
 ```
 
 A window opens and the installer starts by itself. It asks you four things:
@@ -99,22 +99,22 @@ That is all. There is no window and no login. The server starts on its own.
 | What you want | What to type |
 | --- | --- |
 | Start the server | `manuserver` |
-| Stop the server | `manuserver stop` |
-| Check if it is running | `manuserver status` |
+| Stop the server | `manuserver vm_stop` |
+| Check if it is running | `manuserver vm_status` |
 | Open a terminal on it | `manuserver ssh yourname` |
 | Put it on the internet | `manuserver tunnel` |
 | Save a copy of the database | `manuserver backup` |
 | Put a saved copy back | `manuserver restore` |
-| Watch it start up in a window | `manuserver console` |
+| Watch it start up in a window | `manuserver vm_console` |
 
 Replace `yourname` with the username you chose in step 3.
 
-Always use `stop` to shut it down. It tells the server to close everything
+Always use `vm_stop` to shut it down. It tells the server to close everything
 properly first.
 
-If you skipped the `manuserver` command, run these from inside the
-`manuserver_bootable_iso` folder as `./run-manuserver-in-vm.sh` instead — or
-install it now with `./run-manuserver-in-vm.sh install-command`.
+If you skipped the `manuserver` command, run these from inside the clone as
+`./manuserver.sh` instead, or install it now with
+`./manuserver.sh install_command`.
 
 ## Reaching it from other devices
 
@@ -126,7 +126,7 @@ network open the site:
 MANUSERVER_HTTP_BIND=0.0.0.0 manuserver
 ```
 
-SSH stays on this computer either way. `manuserver status` tells you which of
+SSH stays on this computer either way. `manuserver vm_status` tells you which of
 the two you are running. For reaching it from outside the house, use the tunnel
 further down — it needs none of this.
 
@@ -171,9 +171,9 @@ Restoring replaces what is on the server, so it asks you to confirm first.
 
 Both commands ask for the server password, and both need the server running.
 
-## Careful with `install`
+## Careful with `vm_install`
 
-Running `install` again wipes the virtual machine and starts from scratch — the
+Running `vm_install` again wipes the virtual machine and starts from scratch — the
 database goes with it. It asks you to type `ERASE` first, so it cannot happen by
 accident. Take a backup before you do it anyway.
 
@@ -229,7 +229,7 @@ To try changes first, run the site on your own computer — from the top of the
 repo, then open <http://localhost:8000>:
 
 ```sh
-./server/dev/run-local.sh          # add `seed` to fill it with test accounts
+./manuserver.sh site_dev     # add site_seed to fill it with test accounts
 ```
 
 It builds its own small database in `server/dev/.cluster` and touches nothing
@@ -288,7 +288,7 @@ Look at the list and find your USB stick. Be careful: the next command erases
 whatever you point it at.
 
 ```sh
-sudo dd bs=4M status=progress oflag=sync if=out/manuserver-*.iso of=/dev/sdX
+sudo dd bs=4M status=progress oflag=sync if=manuserver-*.iso of=/dev/sdX
 ```
 
 Replace `/dev/sdX` with your USB stick from the list above.

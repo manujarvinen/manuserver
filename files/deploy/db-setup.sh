@@ -15,7 +15,7 @@
 set -euo pipefail
 
 readonly SITE_DIR=/srv/manuserver
-readonly SCHEMA="$SITE_DIR/server/db/schema.sql"
+readonly SCHEMA="$SITE_DIR/files/site/db/schema.sql"
 readonly PGDATA=/var/lib/postgres/data
 readonly DB_NAME=tastehopping
 readonly DB_ROLE=tastehopping
@@ -58,7 +58,7 @@ fi
 # design. Change them here.
 
 cat >"$PGDATA/pg_hba.conf" <<'HBA'
-# Written by server/deploy/db-setup.sh on every boot. Edits are lost.
+# Written by files/deploy/db-setup.sh on every boot. Edits are lost.
 #
 # TYPE  DATABASE        USER            ADDRESS                 METHOD
 
@@ -79,7 +79,7 @@ host    all             all             ::1/128                 scram-sha-256
 HBA
 
 cat >"$PGDATA/pg_ident.conf" <<'IDENT'
-# Written by server/deploy/db-setup.sh on every boot. Edits are lost.
+# Written by files/deploy/db-setup.sh on every boot. Edits are lost.
 #
 # MAPNAME     SYSTEM-USERNAME   PG-USERNAME
 manuserver    http              tastehopping

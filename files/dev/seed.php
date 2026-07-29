@@ -1,7 +1,7 @@
 <?php
 // seed.php — plausible nonsense, so the local database is not empty.
 //
-// Run through server/dev/run-local.sh seed, which sets the DB_* variables
+// Run through `manuserver.sh site_seed`, which sets the DB_* variables
 // first. It prints the key for every account it makes, because a key that is
 // not written down at the moment it is created is gone — that is true of the
 // real site and it is true here.
@@ -13,7 +13,7 @@
 
 declare(strict_types=1);
 
-require dirname(__DIR__) . '/app/bootstrap.php';
+require dirname(__DIR__) . '/site/app/bootstrap.php';
 
 if (PHP_SAPI !== 'cli') {
     exit("seed.php is a command-line script\n");

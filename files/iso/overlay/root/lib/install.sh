@@ -164,7 +164,7 @@ install_account() {
 # --- repo hook -------------------------------------------------------------
 #
 # This is the part that makes the ISO stop changing. The ISO installs bare
-# Arch and stops. The moment server/deploy/provision.sh is committed to the
+# Arch and stops. The moment files/deploy/provision.sh is committed to the
 # repo, the *same ISO* installs the full server — no rebuild. Everything
 # downstream of this clone iterates with a push and a reinstall.
 install_repo() {
@@ -186,7 +186,7 @@ install_repo() {
   # arch-chroot has no running init, so provision.sh can `systemctl enable`
   # but never `start`. Anything needing a live service must defer to a
   # first-boot one-shot unit.
-  if [[ -x $target/server/deploy/provision.sh || -f $target/server/deploy/provision.sh ]]; then
-    ui_run "provisioning the server" arch-chroot /mnt bash /srv/manuserver/server/deploy/provision.sh
+  if [[ -x $target/files/deploy/provision.sh || -f $target/files/deploy/provision.sh ]]; then
+    ui_run "provisioning the server" arch-chroot /mnt bash /srv/manuserver/files/deploy/provision.sh
   fi
 }

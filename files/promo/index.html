@@ -132,8 +132,8 @@
       server, by running the script that comes with it. Usually 5–20 minutes,
       depending on your machine and connection.
 <pre>git clone https://github.com/manujarvinen/manuserver.git
-cd manuserver/manuserver_bootable_iso
-./build_manuserver_iso.sh</pre>
+cd manuserver
+./manuserver.sh build_iso</pre>
       <p class="note">
         If it says it added you to the <code>kvm</code> group, log out and back
         in before the next step. Otherwise the virtual machine runs without
@@ -148,7 +148,7 @@ cd manuserver/manuserver_bootable_iso
         The following line, run from your local Arch Linux, will create a
         fresh virtual machine and install manuserver into it.
       </p>
-<pre>./run-manuserver-in-vm.sh install</pre>
+<pre>./manuserver.sh vm_install</pre>
       <p class="note">
         Or write the <code>.iso</code> to a USB stick and install it onto a
         real computer.
@@ -194,12 +194,12 @@ cd manuserver/manuserver_bootable_iso
     is what sets the server up, at the end of every install. It is a
     multi-purpose repository.
   </p>
-<pre>manuserver             start it
-manuserver stop        shut it down
-manuserver status      is it running?
-manuserver ssh mj      open a terminal on it
-manuserver tunnel      put it on the public internet
-manuserver backup mj   save the database to a file</pre>
+<pre>manuserver               start it
+manuserver vm_stop       shut it down
+manuserver vm_status     is it running?
+manuserver ssh mj        open a terminal on it
+manuserver tunnel        put it on the public internet
+manuserver backup mj     save the database to a file</pre>
   <p class="note">
     Replace <code>mj</code> with the username you gave the installer. Leave it
     out and it uses your own computer's username, which is only right if the
@@ -256,7 +256,7 @@ manuserver backup mj   save the database to a file</pre>
   </ol>
 
   <p>Then turn it on:</p>
-<pre>manuserver tunnel   virtual machine
+<pre>manuserver tunnel        virtual machine
 sudo manuserver-tunnel             real server, over ssh</pre>
   <p>
     Paste the token at the prompt — nothing appears as you paste. It says
@@ -289,7 +289,7 @@ sudo manuserver-tunnel             real server, over ssh</pre>
   <ul>
     <li>your computer going to sleep, suspending or hibernating</li>
     <li>shutting down or restarting your computer</li>
-    <li><code>manuserver stop</code></li>
+    <li><code>manuserver vm_stop</code></li>
   </ul>
   <p class="note">
     Most desktops lock the screen and then suspend a few minutes later. If you

@@ -3,8 +3,8 @@
 # host-tools.sh — what this machine needs installed to build the ISO and run
 # the VM, and how to get it.
 #
-# Not a script you run. It is sourced by build_manuserver_iso.sh and
-# run-manuserver-in-vm.sh, both of which install what they are missing when
+# Not a script you run. It is sourced by files/lib/iso.sh and files/lib/vm.sh,
+# both of which install what they are missing when
 # they are missing it. The list lives here, in one place, so the two callers
 # cannot drift apart.
 

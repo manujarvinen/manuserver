@@ -98,10 +98,10 @@ cmd_on() {
   need_root
 
   command -v cloudflared >/dev/null ||
-    die "cloudflared is not installed — run server/deploy/provision.sh first"
+    die "cloudflared is not installed — run files/deploy/provision.sh first"
 
   [[ -f /etc/systemd/system/$SERVICE ]] ||
-    die "$SERVICE is missing — run server/deploy/provision.sh first"
+    die "$SERVICE is missing — run files/deploy/provision.sh first"
 
   cat <<'INTRO'
 

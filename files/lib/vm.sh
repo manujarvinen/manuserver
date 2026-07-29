@@ -1,114 +1,9 @@
-#!/usr/bin/env bash
+# shellcheck shell=bash
 #
-# manuserver — install it into a VM, then run it like a server.
+# vm.sh — everything that drives the virtual machine: installing into it,
+# starting and stopping it, getting a shell on it, backups, and the tunnel.
 #
-# (In the checkout this file is run-manuserver-in-vm.sh. The header doubles as
-# --help, so it is written in terms of the installed name.)
-#
-# After `install-command` this is `manuserver` on your PATH, and every line
-# below works from any directory:
-#
-#   manuserver install          fresh disk, boot the ISO, install
-#   manuserver install-command  put `manuserver` on your PATH
-#   manuserver                  start the server in the background
-#   manuserver stop             ask it to shut down cleanly
-#   manuserver status           is it up, and on which ports
-#   manuserver ssh [user]       open a shell on it
-#   manuserver tunnel           put the site on the public internet
-#   manuserver backup           save the database
-#   manuserver restore          put a saved database back
-#   manuserver console          boot it in a window, to watch it boot
-#
-# The VM, its backups and the installed command all live under
-# ~/.local/share/manuserver, never in the checkout — so the clone can be moved
-# or deleted afterwards without taking the server with it. Only `install`
-# needs the checkout, because only it needs an ISO.
-#
-# Starting and stopping the VM *is* starting and stopping the server: the
-# installed system autologins on tty1 and brings its services up on boot, so
-# there is nothing to log into first.
-#
-# Forwards host 8080 -> 80 and 2222 -> 22. Everything is UEFI; the installer
-# refuses to run under BIOS, so a BIOS test would test nothing.
-
-set -euo pipefail
-
-# readlink -f so that HERE is where the script really lives, not where the
-# symlink to it does. `install-command` puts a copy in the data directory and
-# links it onto PATH, and the copy still has to find its own lib/.
-SELF_PATH="$(readlink -f -- "${BASH_SOURCE[0]}")"
-HERE="$(cd -- "$(dirname -- "$SELF_PATH")" && pwd)"
-readonly SELF_PATH HERE
-
-# How to refer to this command in messages. `manuserver` once it is on PATH,
-# ./run-manuserver-in-vm.sh when run out of the checkout.
-SELF="${0##*/}"
-[[ $SELF == manuserver ]] || SELF="./$SELF"
-readonly SELF
-
-# Two places this runs from: the git checkout, and the copy in the data
-# directory. Only the checkout has ISOs to install from and a repo to delete.
-if [[ -f $HERE/build_manuserver_iso.sh ]]; then
-  IN_REPO=1
-  REPO_ROOT="$(cd -- "$HERE/.." && pwd)"
-else
-  IN_REPO=0
-  REPO_ROOT=''
-fi
-readonly IN_REPO REPO_ROOT
-
-# The VM lives in the user's data directory, deliberately not in the checkout.
-# A clone sitting in ~/Downloads may be moved, renamed or deleted, and none of
-# that should take an installed server and its database with it.
-#
-# Not /opt or /var/lib: those are root-owned, and this VM is started by you,
-# runs as you, and uses your kvm group membership. Putting it there would mean
-# sudo for every start, stop and backup, to no benefit.
-readonly DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}/manuserver"
-readonly VM="$DATA_HOME/vm"
-readonly CLI_DIR="$DATA_HOME/bin"
-
-# Backups are the exception, and go somewhere you can actually see them.
-# ~/.local/share is right for state you never touch by hand; a database dump is
-# the opposite — the entire point of one is dragging it onto a USB stick.
-#
-# xdg-user-dir answers "$HOME" when the machine has no user-dirs configuration,
-# which would drop .sql files loose in the home directory. Hence the guard.
-BACKUPS="$(xdg-user-dir DOWNLOAD 2>/dev/null || true)"
-[[ -n $BACKUPS && $BACKUPS != "$HOME" ]] || BACKUPS="$HOME/Downloads"
-readonly BACKUPS
-
-readonly OUT="$HERE/out"
-readonly DISK="$VM/manuserver.qcow2"
-readonly NVRAM="$VM/OVMF_VARS.fd"
-readonly PIDFILE="$VM/qemu.pid"
-readonly MONITOR="$VM/monitor.sock"
-readonly DISK_SIZE=20G
-readonly SSH_PORT=2222
-readonly HTTP_PORT=8080
-
-# What the forwarded ports listen on.
-#
-# QEMU's hostfwd takes the host address before the port, and leaving it empty
-# — as this did — binds to 0.0.0.0. That put the VM's sshd in front of the
-# whole local network: any device on the wifi could reach it on 2222 and guess
-# passwords at it, unrated and unlogged. Nobody asked for that, and ssh here is
-# always from this machine.
-readonly SSH_BIND=127.0.0.1
-
-# The site is the one thing you might genuinely want to open on your phone, so
-# this is a knob rather than a constant. It still defaults to closed:
-#
-#   MANUSERVER_HTTP_BIND=0.0.0.0 manuserver
-#
-# The public route is the Cloudflare tunnel, which needs none of this.
-readonly HTTP_BIND="${MANUSERVER_HTTP_BIND:-127.0.0.1}"
-
-die() { printf '%s: %s\n' "$SELF" "$*" >&2; exit 1; }
-say() { printf '==> %s\n' "$*"; }
-
-# shellcheck source=lib/host-tools.sh
-source "$HERE/lib/host-tools.sh"
+# Sourced by manuserver.sh. Defines functions and runs nothing.
 
 # --- tooling ---------------------------------------------------------------
 #
@@ -137,14 +32,14 @@ ensure_firmware() {
     /usr/share/edk2/x64/OVMF_CODE.fd \
     /usr/share/edk2-ovmf/x64/OVMF_CODE.4m.fd \
     /usr/share/edk2-ovmf/x64/OVMF_CODE.fd \
-    /usr/share/OVMF/OVMF_CODE.fd) || die "OVMF firmware not found — run ./build_manuserver_iso.sh first"
+    /usr/share/OVMF/OVMF_CODE.fd) || die "OVMF firmware not found — run ./manuserver.sh build_iso first"
 
   OVMF_VARS=$(find_firmware \
     /usr/share/edk2/x64/OVMF_VARS.4m.fd \
     /usr/share/edk2/x64/OVMF_VARS.fd \
     /usr/share/edk2-ovmf/x64/OVMF_VARS.4m.fd \
     /usr/share/edk2-ovmf/x64/OVMF_VARS.fd \
-    /usr/share/OVMF/OVMF_VARS.fd) || die "OVMF vars not found — run ./build_manuserver_iso.sh first"
+    /usr/share/OVMF/OVMF_VARS.fd) || die "OVMF vars not found — run ./manuserver.sh build_iso first"
 }
 
 # KVM needs membership of the kvm group. Without it the VM still runs, just
@@ -181,18 +76,18 @@ vm_pid() {
 vm_running() { vm_pid >/dev/null; }
 
 require_disk() {
-  [[ -f $DISK ]] || die "nothing installed yet — run: $SELF install"
+  [[ -f $DISK ]] || die "nothing installed yet — run: $SELF vm_install"
 }
 
 # Earlier versions kept the VM inside the checkout, at build/vm. Move it out on
 # first run, so upgrading does not look like a lost server.
 migrate_from_checkout() {
-  local old_vm="$HERE/build/vm" pid old
+  local old_vm="$ROOT/manuserver_bootable_iso/build/vm" pid old
 
   # Backups have lived in the checkout, and briefly in the data directory.
   # Move the dumps themselves rather than the directory, since the destination
   # is now a folder full of other things.
-  for old in "$HERE/backups" "$DATA_HOME/backups"; do
+  for old in "$ROOT/manuserver_bootable_iso/backups" "$DATA_HOME/backups"; do
     [[ -d $old ]] || continue
 
     if compgen -G "$old/manuserver-*.sql" >/dev/null; then
@@ -221,7 +116,7 @@ migrate_from_checkout() {
   say "moving the VM out of the checkout into $VM"
   install -d "$DATA_HOME"
   mv -- "$old_vm" "$VM"
-  rmdir -- "$HERE/build" 2>/dev/null || true
+  rmdir -- "$ROOT/manuserver_bootable_iso/build" 2>/dev/null || true
   say "the checkout can now be moved or deleted without losing the server"
 }
 
@@ -249,7 +144,7 @@ base_args() {
 # `pipefail`, a missing out/ makes find fail, which would abort the script
 # through `set -e` before the caller can print something useful.
 newest_iso() {
-  { find "$OUT" -maxdepth 1 -name '*.iso' -printf '%T@ %p\n' 2>/dev/null || true; } |
+  { find "$ISO_OUT" -maxdepth 1 -name '*.iso' -printf '%T@ %p\n' 2>/dev/null || true; } |
     sort -rn | head -n1 | cut -d' ' -f2-
 }
 
@@ -269,7 +164,7 @@ confirm_wipe() {
   printf 'else on it. There is no undo.\n\n'
 
   if [[ ! -t 0 ]]; then
-    die "refusing to erase it without a confirmation. Use: $SELF install --wipe"
+    die "refusing to erase it without a confirmation. Use: $SELF vm_install --wipe"
   fi
 
   read -rp "Type ERASE to confirm, anything else to cancel: " reply
@@ -288,9 +183,13 @@ cmd_install_command() {
 
   local bindir="$HOME/.local/bin" link="$HOME/.local/bin/manuserver"
 
-  install -d "$CLI_DIR/lib" "$bindir"
-  install -m 755 "$HERE/run-manuserver-in-vm.sh" "$CLI_DIR/manuserver"
-  install -m 644 "$HERE/lib/host-tools.sh" "$CLI_DIR/lib/host-tools.sh"
+  # The same shape as the checkout — manuserver.sh with files/lib beside it —
+  # so the copy resolves its libraries exactly the way the original does.
+  # files/iso is what is missing, and that absence is what tells the copy it is
+  # a copy.
+  install -d "$CLI_DIR/files/lib" "$bindir"
+  install -m 755 "$ROOT/manuserver.sh" "$CLI_DIR/manuserver"
+  install -m 644 "$ROOT/files/lib/"*.sh "$CLI_DIR/files/lib/"
   ln -sfn -- "$CLI_DIR/manuserver" "$link"
 
   say "installed $link"
@@ -317,7 +216,7 @@ offer_install_command() {
   read -rp "Install the 'manuserver' command, so you can run it from anywhere? [Y/n] " reply
 
   case ${reply,,} in
-    n|no) say "skipped — do it later with: $SELF install-command"; return 0 ;;
+    n|no) say "skipped — do it later with: $SELF install_command"; return 0 ;;
   esac
 
   cmd_install_command
@@ -335,10 +234,10 @@ offer_repo_cleanup() {
 
   # Deleting a checkout with work in it cannot be undone from here, so this
   # refuses rather than asks.
-  if git -C "$REPO_ROOT" rev-parse --git-dir >/dev/null 2>&1; then
-    if [[ -n $(git -C "$REPO_ROOT" status --porcelain 2>/dev/null) ]]; then
+  if git -C "$ROOT" rev-parse --git-dir >/dev/null 2>&1; then
+    if [[ -n $(git -C "$ROOT" status --porcelain 2>/dev/null) ]]; then
       keep='it has uncommitted changes'
-    elif [[ -n $(git -C "$REPO_ROOT" log --branches --not --remotes --oneline 2>/dev/null) ]]; then
+    elif [[ -n $(git -C "$ROOT" log --branches --not --remotes --oneline 2>/dev/null) ]]; then
       keep='it has commits that were never pushed'
     fi
   else
@@ -348,7 +247,7 @@ offer_repo_cleanup() {
   printf '\n'
 
   if [[ -n $keep ]]; then
-    say "keeping $REPO_ROOT — $keep"
+    say "keeping $ROOT — $keep"
     return 0
   fi
 
@@ -356,15 +255,15 @@ offer_repo_cleanup() {
   printf '  %s\n' "$DATA_HOME"
   printf 'so the checkout is no longer needed to run the server. Deleting it\n'
   printf 'also removes any ISOs left in it. Everything is on GitHub.\n\n'
-  read -rp "Delete $REPO_ROOT ? [y/N] " reply
+  read -rp "Delete $ROOT ? [y/N] " reply
 
   case ${reply,,} in
     y|yes) ;;
-    *) say "kept $REPO_ROOT"; return 0 ;;
+    *) say "kept $ROOT"; return 0 ;;
   esac
 
   printf '\n'
-  say "deleting $REPO_ROOT"
+  say "deleting $ROOT"
   printf '\nStart the server with:  manuserver\n\n'
 
   # exec, from outside the tree. Bash reads a script incrementally as it runs,
@@ -372,25 +271,25 @@ offer_repo_cleanup() {
   # corrupt the rest of the run. Replacing the shell means it is never read
   # again, and cd / means the working directory is not being deleted either.
   cd /
-  exec rm -rf -- "$REPO_ROOT"
+  exec rm -rf -- "$ROOT"
 }
 
-cmd_install() {
+cmd_vm_install() {
   local iso wipe=0
 
   ((IN_REPO)) || die "installing needs the checkout and an ISO to install from.
      Clone it again and build one:
        git clone https://github.com/manujarvinen/manuserver.git
-       cd manuserver/manuserver_bootable_iso && ./build_manuserver_iso.sh"
+       cd manuserver && ./manuserver.sh build_iso"
 
   # `--wipe` is for when you already know, and for scripts. It skips the
   # question, nothing else.
   [[ ${1:-} == --wipe || ${1:-} == -f ]] && wipe=1
 
   iso=$(newest_iso)
-  [[ -n $iso ]] || die "no ISO in $OUT — run: ./build_manuserver_iso.sh"
+  [[ -n $iso ]] || die "no ISO in $ISO_OUT — run: $SELF build_iso"
 
-  ! vm_running || die "the VM is running — stop it first: $SELF stop"
+  ! vm_running || die "the VM is running — stop it first: $SELF vm_stop"
 
   if [[ -f $DISK ]] && ((!wipe)); then
     confirm_wipe
@@ -444,7 +343,7 @@ offer_iso_cleanup() {
   case ${reply,,} in
     y|yes)
       rm -f "$iso"
-      say "removed $(basename "$iso") — rebuild with ./build_manuserver_iso.sh"
+      say "removed $(basename "$iso") — rebuild with: $SELF build_iso"
       ;;
     *)
       say "kept $iso"
@@ -452,7 +351,7 @@ offer_iso_cleanup() {
   esac
 }
 
-cmd_start() {
+cmd_vm_start() {
   require_disk
   if vm_running; then
     say "already running (pid $(vm_pid))"
@@ -476,10 +375,10 @@ cmd_start() {
   say "manuserver is booting (pid $(vm_pid))"
   printf '    ssh    ssh -p %s <user>@localhost   (or: %s ssh)\n' "$SSH_PORT" "$SELF"
   printf '    http   http://localhost:%s\n' "$HTTP_PORT"
-  printf '    stop   %s stop\n' "$SELF"
+  printf '    stop   %s vm_stop\n' "$SELF"
 }
 
-cmd_stop() {
+cmd_vm_stop() {
   vm_running || { say "not running"; return 0; }
 
   local pid
@@ -507,7 +406,7 @@ cmd_stop() {
   say "stopped cleanly after ${waited}s"
 }
 
-cmd_status() {
+cmd_vm_status() {
   if vm_running; then
     say "running (pid $(vm_pid))"
     printf '    ssh    %s:%s\n    http   http://%s:%s\n' \
@@ -519,7 +418,7 @@ cmd_status() {
       printf '           reachable from the local network (MANUSERVER_HTTP_BIND)\n'
   else
     say "not running"
-    [[ -f $DISK ]] || printf '    no disk installed yet — run: %s install\n' "$SELF"
+    [[ -f $DISK ]] || printf '    no disk installed yet — run: %s vm_install\n' "$SELF"
   fi
 }
 
@@ -534,7 +433,7 @@ ssh_opts() {
 }
 
 cmd_ssh() {
-  vm_running || die "not running — start it with: $SELF"
+  vm_running || die "not running — start it with: $SELF vm_start"
   local user=${1:-$USER}
   local -a opts=()
   mapfile -t opts < <(ssh_opts)
@@ -550,7 +449,7 @@ cmd_ssh() {
 # This script never receives it, never passes it as an argument, and cannot
 # leave it in the host's shell history or process list.
 cmd_tunnel() {
-  vm_running || die "not running — start it with: $SELF"
+  vm_running || die "not running — start it with: $SELF vm_start"
 
   local action=on user=$USER
 
@@ -593,10 +492,10 @@ require_postgres() {
   local user=$1
   vm_run notty "$user" 'command -v pg_dumpall >/dev/null 2>&1' ||
     die "Postgres is not installed on the server.
-     It is installed by server/deploy/provision.sh during the install. If this
+     It is installed by files/deploy/provision.sh during the install. If this
      machine was installed before that script existed, bring it up to date:
        $SELF ssh $user
-       cd /srv/manuserver && sudo git pull && sudo bash server/deploy/provision.sh"
+       cd /srv/manuserver && sudo git pull && sudo bash files/deploy/provision.sh"
 }
 
 # manuserver-*.sql, not *.sql. Backups share a directory with everything else
@@ -610,7 +509,7 @@ newest_backup() {
 cmd_backup() {
   local user=${1:-$USER} stamp file
 
-  vm_running || die "not running — start it with: $SELF"
+  vm_running || die "not running — start it with: $SELF vm_start"
   require_postgres "$user"
 
   install -d "$BACKUPS"
@@ -638,7 +537,7 @@ cmd_backup() {
 cmd_restore() {
   local file=${1:-} user=${2:-$USER} reply
 
-  vm_running || die "not running — start it with: $SELF"
+  vm_running || die "not running — start it with: $SELF vm_start"
 
   if [[ -z $file ]]; then
     file=$(newest_backup)
@@ -669,9 +568,9 @@ cmd_restore() {
   say "restored from $(basename "$file")"
 }
 
-cmd_console() {
+cmd_vm_console() {
   require_disk
-  ! vm_running || die "already running in the background — stop it first: $SELF stop"
+  ! vm_running || die "already running in the background — stop it first: $SELF vm_stop"
   ensure_vm
   [[ -f $NVRAM ]] || reset_nvram
   local -a args=()
@@ -679,24 +578,3 @@ cmd_console() {
   exec qemu-system-x86_64 "${args[@]}" -display gtk
 }
 
-# A no-op unless this is an old checkout whose VM still sits inside it.
-migrate_from_checkout
-
-case "${1:-start}" in
-  install) shift; cmd_install "$@" ;;
-  install-command) cmd_install_command ;;
-  start|up) cmd_start ;;
-  stop|down) cmd_stop ;;
-  status) cmd_status ;;
-  ssh) shift; cmd_ssh "$@" ;;
-  tunnel) shift; cmd_tunnel "$@" ;;
-  backup) shift; cmd_backup "$@" ;;
-  restore) shift; cmd_restore "$@" ;;
-  console) cmd_console ;;
-  -h|--help|help)
-    # The header comment is the help text; print it up to the first line that
-    # isn't a comment, so the two can never drift apart.
-    awk 'NR > 2 && /^#/ { sub(/^# ?/, ""); print; next } NR > 2 { exit }' "$SELF_PATH"
-    ;;
-  *) die "unknown command: $1 (try: $SELF --help)" ;;
-esac

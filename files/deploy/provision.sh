@@ -34,7 +34,7 @@ set -euo pipefail
 readonly PACKAGES=(nginx php php-fpm php-pgsql postgresql cloudflared)
 
 readonly SITE_DIR=/srv/manuserver
-readonly DOC_ROOT="$SITE_DIR/public_html"
+readonly DOC_ROOT="$SITE_DIR/files/site/public_html"
 readonly PGDATA=/var/lib/postgres/data
 readonly SESSION_DIR=/var/lib/php/sessions
 readonly LOG="$PROVISION_ROOT/var/log/manuserver-provision.log"
@@ -77,7 +77,7 @@ run pacman -Syu --needed --noconfirm "${PACKAGES[@]}"
 step 'configuring php'
 
 write /etc/php/conf.d/manuserver.ini <<'INI'
-; Written by server/deploy/provision.sh. Edits here are lost on reprovision.
+; Written by files/deploy/provision.sh. Edits here are lost on reprovision.
 
 ; The only reason php-pgsql is installed.
 extension=pdo_pgsql
@@ -111,7 +111,7 @@ run install -d -o http -g http -m 700 "$SESSION_DIR"
 step 'configuring nginx'
 
 write /etc/nginx/nginx.conf <<NGINX
-# Written by server/deploy/provision.sh. Edits here are lost on reprovision.
+# Written by files/deploy/provision.sh. Edits here are lost on reprovision.
 
 user http;
 worker_processes auto;
@@ -217,15 +217,15 @@ step 'installing the database setup unit'
 write /etc/systemd/system/manuserver-db.service <<UNIT
 [Unit]
 Description=manuserver database setup
-Documentation=file://$SITE_DIR/server/deploy/db-setup.sh
+Documentation=file://$SITE_DIR/files/deploy/db-setup.sh
 Wants=postgresql.service
 After=postgresql.service
-ConditionPathExists=$SITE_DIR/server/deploy/db-setup.sh
+ConditionPathExists=$SITE_DIR/files/deploy/db-setup.sh
 
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-ExecStart=/bin/bash $SITE_DIR/server/deploy/db-setup.sh
+ExecStart=/bin/bash $SITE_DIR/files/deploy/db-setup.sh
 
 [Install]
 WantedBy=multi-user.target
@@ -245,7 +245,7 @@ UNIT
 step 'hardening ssh'
 
 write /etc/ssh/sshd_config.d/10-manuserver.conf <<'SSHD'
-# Written by server/deploy/provision.sh. Edits here are lost on reprovision.
+# Written by files/deploy/provision.sh. Edits here are lost on reprovision.
 
 # Six guesses per connection is the default. Reconnecting is free either way,
 # so this is not a rate limit — it just makes each attempt cost more setup.
@@ -317,7 +317,7 @@ UNIT
 
 # A symlink rather than a copy, so `git pull` updates the command along with
 # everything else.
-run ln -sfn "$SITE_DIR/server/deploy/tunnel.sh" /usr/local/bin/manuserver-tunnel
+run ln -sfn "$SITE_DIR/files/deploy/tunnel.sh" /usr/local/bin/manuserver-tunnel
 
 # --- services ---------------------------------------------------------------
 
@@ -344,7 +344,7 @@ rm -f "$PROVISION_ROOT/etc/profile.d/manuserver-provision.sh" "$PROVISION_ROOT/e
 # paste.
 write /etc/profile.d/manuserver.sh <<'SH'
 # shellcheck shell=sh
-# Written by server/deploy/provision.sh. Edits here are lost on reprovision.
+# Written by files/deploy/provision.sh. Edits here are lost on reprovision.
 #
 # Printed by every login shell, which on this machine means the autologin
 # console shows it the moment the system finishes booting.

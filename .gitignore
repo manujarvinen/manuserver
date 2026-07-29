@@ -1,9 +1,9 @@
-# ISO build artefacts: the work tree, the VM disks, and the ISO itself.
-manuserver_bootable_iso/build/
-manuserver_bootable_iso/out/
+# The finished ISO lands in the repo root, where it is easy to find and easy to
+# drag onto a USB stick. It is about a gigabyte.
+/manuserver-*.iso
 
-# Database copies. These hold real data and have no business in a public repo.
-manuserver_bootable_iso/backups/
+# The build's scratch space, which is much larger and much less interesting.
+files/iso/build/
 
-# The throwaway Postgres cluster server/dev/run-local.sh builds for itself.
-server/dev/.cluster/
+# The throwaway Postgres cluster `manuserver.sh site_dev` builds for itself.
+files/dev/.cluster/

@@ -1,7 +1,7 @@
 -- schema.sql — the whole Tastehopping database.
 --
--- Applied by server/deploy/provision.sh on every provisioning run, and by
--- server/dev/run-local.sh when it builds a throwaway cluster. That means it
+-- Applied by files/deploy/db-setup.sh at every boot of the server, and by
+-- `manuserver.sh site_dev` when it builds a throwaway cluster. That means it
 -- has to be safe to run against a database that already has data in it, so
 -- every statement here is IF NOT EXISTS or OR REPLACE. Never write a
 -- destructive statement in this file.
@@ -91,7 +91,7 @@ CREATE INDEX IF NOT EXISTS rep_votes_subject_idx ON rep_votes (subject_id);
 
 -- Reports are counted, not read. Nobody moderates this by hand; a post that
 -- enough distinct accounts object to simply stops appearing in feeds. See
--- REPORT_THRESHOLD in server/app/posts.php for the number.
+-- REPORT_THRESHOLD in files/site/app/posts.php for the number.
 CREATE TABLE IF NOT EXISTS reports (
     post_id    bigint      NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
     user_id    bigint      NOT NULL REFERENCES users(id) ON DELETE CASCADE,

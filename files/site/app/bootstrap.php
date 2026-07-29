@@ -9,7 +9,6 @@
 declare(strict_types=1);
 
 const APP_DIR  = __DIR__;
-const REPO_DIR = __DIR__ . '/../..';
 
 // Where provision.sh leaves the generated database password. Mode 640,
 // root:http, so php-fpm can read it and a shell user cannot. Absent during

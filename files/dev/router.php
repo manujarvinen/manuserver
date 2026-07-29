@@ -10,7 +10,7 @@
 
 declare(strict_types=1);
 
-$docroot = dirname(__DIR__, 2) . '/public_html';
+$docroot = dirname(__DIR__) . '/site/public_html';
 $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
 $file = $docroot . $path;
 
