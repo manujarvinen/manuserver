@@ -267,7 +267,7 @@ Cloudflare's nameservers before any of the rest works.
 
 ### 2. Make the tunnel and get its token
 
-4. **Networking → Tunnels → Create a tunnel**. Name it `manuserver` and select
+4. **Networks → Tunnels & Mesh → Create a tunnel**. Name it `manuserver` and select
    **Create Tunnel**.
 5. It offers you an install command for your operating system. You do not run
    it — the long string starting `eyJhIjoi` inside it is the token, and that is

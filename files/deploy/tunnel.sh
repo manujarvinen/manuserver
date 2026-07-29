@@ -50,7 +50,7 @@ cmd_status() {
   printf '\n'
   systemctl status --no-pager --lines=8 "$SERVICE" || true
   printf '\nthe public address is whatever hostname you attached to this tunnel\n'
-  printf 'in the cloudflare dashboard, under Networking -> Tunnels -> Routes.\n'
+  printf 'in the cloudflare dashboard, under Networks -> Tunnels & Mesh -> your tunnel.\n'
   printf 'a connected tunnel with no route has no address at all.\n'
 }
 
@@ -108,8 +108,8 @@ cmd_on() {
 
   Paste the tunnel token from Cloudflare.
 
-  Networking -> Tunnels -> your tunnel. It shows an install command containing
-  a long string starting "eyJhIjoi". That is the token; pasting the whole
+  Networks -> Tunnels & Mesh -> your tunnel. It shows an install command with
+  a long string starting "eyJhIjoi" in it. That is the token; pasting the whole
   command is fine too.
 
   Afterwards, give the tunnel an address: Networks -> Tunnels & Mesh -> your

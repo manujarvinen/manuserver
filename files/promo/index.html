@@ -189,8 +189,8 @@ sudo -u postgres pg_dumpall --clean &gt; backup.sql</pre>
       cannot be added at your registrar or in cPanel.
     </li>
     <li>
-      <strong>Networking → Tunnels → Create a tunnel</strong>, name it, and
-      select <strong>Create Tunnel</strong>.
+      <strong>Networks → Tunnels &amp; Mesh → Create a tunnel</strong>, name it,
+      and select <strong>Create Tunnel</strong>.
     </li>
     <li>
       It offers an install command. You do not run it — the long
@@ -204,10 +204,20 @@ sudo -u postgres pg_dumpall --clean &gt; backup.sql</pre>
       Subdomain and Path empty, pick your domain, and set the service to type
       <code>HTTP</code>, URL <code>localhost:80</code> — port 80, not the 8080
       in the placeholder. Cloudflare writes the DNS record itself.
+      <br>The bare domain does not cover <code>www.</code> — if you want that
+      too, add a second route with <code>www</code> in the Subdomain box.
       <br>Not <strong>Networks → Routes</strong> in the side menu; that one is
       for private networks and cannot publish a site.
     </li>
   </ol>
+  <p class="note">
+    If saving the route is refused with <em>a DNS record with this name already
+    exists</em>, the domain already had one at the root — Cloudflare imported it
+    when you added the site. Delete that <code>A</code> record under
+    <strong>DNS → Records</strong> in the main dashboard, leave the
+    <code>MX</code> ones alone or the domain stops receiving mail, and save
+    again.
+  </p>
   <p class="note">
     Then <code>manuserver tunnel</code> — or <code>sudo manuserver-tunnel</code>
     on a PC — asks for the token.
