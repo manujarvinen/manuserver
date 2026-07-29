@@ -96,9 +96,8 @@
   <p>In tastehopping.com, There are no emails, no passwords and no profiles — joining is one button, and the server hands you a made-up name and one long key that <em>is</em> the account.</p>
 
   <p class="requirement">
-    To build the <code>.iso</code> you need Arch Linux on an ordinary Intel or
-    AMD machine, and about 15 GB free. Not a Raspberry Pi or an Apple Silicon
-    Mac.
+    To build the <code>.iso</code>: Arch Linux on an Intel or AMD machine, and
+    15 GB free.
   </p>
 
   <h2>How to use</h2>
@@ -107,15 +106,10 @@ cd manuserver
 ./manuserver.sh build_iso     # ~20 min
 ./manuserver.sh vm_install</pre>
   <p class="note">
-    The installer asks four things — network, username, password, which disk —
-    and does the rest itself: nginx, PHP, Postgres, and the database. It wipes
-    the disk it installs onto. Or write the <code>.iso</code> to a USB stick and
-    install onto a real computer.
-  </p>
-  <p class="note">
-    When it finishes it offers to put a <code>manuserver</code> command on your
-    PATH, which is what the next section assumes, and then to delete the
-    <code>.iso</code> and the clone — neither is needed to run the server.
+    Four questions — network, username, password, which disk — then it sets up
+    nginx, PHP, Postgres and the database itself. Afterwards it offers you a
+    <code>manuserver</code> command, and to delete the <code>.iso</code> and the
+    clone. Neither is needed to run the server.
   </p>
 
   <h2>Running it</h2>
@@ -126,31 +120,28 @@ manuserver ssh mj        open a terminal on it
 manuserver tunnel        put it on the public internet
 manuserver backup mj     save the database to a file</pre>
   <p class="note">
-    No window opens — the virtual machine runs in the background, the way a
-    server does. The site is at
-    <a href="http://localhost:8080">localhost:8080</a>.
+    No window opens; it runs in the background, the way a server does. The site
+    is at <a href="http://localhost:8080">localhost:8080</a>.
   </p>
 
   <h2>On the internet</h2>
   <p>
-    A Cloudflare tunnel publishes it without touching your router: the server
-    dials out, and visitors are passed back down that connection. Free, already
-    installed, and switched off until you give it a token.
+    A Cloudflare tunnel publishes it without opening anything on your router.
+    Already installed, and off until you give it a token —
     <code>manuserver tunnel</code> asks for one.
   </p>
 
   <h2>Security</h2>
   <p>
-    Root is locked, and the virtual machine is bound to your own computer, so
-    neither the site nor SSH is visible to the rest of your network. There is
-    no database password, because a password has no use — nothing reaches the
+    Root is locked, and the virtual machine is bound to your own computer. There
+    is no database password, because a password has no use — nothing reaches the
     database from the network, and only the website and the sudo user can open
     it. And a stored secret could be stolen.
   </p>
   <p class="note">
-    What it does not protect you from: anyone holding an account key
-    <em>is</em> that account, Cloudflare can see the traffic it carries, and
-    the disk is not encrypted.
+    It does not protect you from: whoever holds an account key <em>is</em> that
+    account, Cloudflare can see the traffic it carries, and the disk is not
+    encrypted.
   </p>
 
   <footer>
