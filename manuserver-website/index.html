@@ -161,8 +161,19 @@ cd manuserver/manuserver_bootable_iso
     </li>
     <li>
       When the install is finished, press enter. The virtual machine window
-      closes on its own. Then start the server:
-<pre>./run-manuserver-in-vm.sh</pre>
+      closes on its own. It then offers to delete the <code>.iso</code>, put a
+      <code>manuserver</code> command on your PATH, and delete the clone —
+      leaving you with a server and one command that works from any folder.
+      <p class="note">
+        The virtual machine itself lives in
+        <code>~/.local/share/manuserver</code>, never in the clone, so deleting
+        the clone cannot take it with it. Only installing again needs the clone
+        back, because only that needs an <code>.iso</code>.
+      </p>
+    </li>
+    <li>
+      Start the server:
+<pre>manuserver</pre>
       <p class="note">
         Use the same username you gave the installer when you connect to it
         later.
@@ -183,12 +194,12 @@ cd manuserver/manuserver_bootable_iso
     is what sets the server up, at the end of every install. It is a
     multi-purpose repository.
   </p>
-<pre>./run-manuserver-in-vm.sh             start it
-./run-manuserver-in-vm.sh stop        shut it down
-./run-manuserver-in-vm.sh status      is it running?
-./run-manuserver-in-vm.sh ssh mj      open a terminal on it
-./run-manuserver-in-vm.sh tunnel      put it on the public internet
-./run-manuserver-in-vm.sh backup mj   save the database to a file</pre>
+<pre>manuserver             start it
+manuserver stop        shut it down
+manuserver status      is it running?
+manuserver ssh mj      open a terminal on it
+manuserver tunnel      put it on the public internet
+manuserver backup mj   save the database to a file</pre>
   <p class="note">
     Replace <code>mj</code> with the username you gave the installer. Leave it
     out and it uses your own computer's username, which is only right if the
@@ -196,7 +207,7 @@ cd manuserver/manuserver_bootable_iso
   </p>
 
   <p>
-    No window opens. <code>./run-manuserver-in-vm.sh</code> starts the virtual
+    No window opens. <code>manuserver</code> starts the virtual
     machine in the background, from your own computer's terminal — the way a
     server runs. You control manuserver through <code>ssh</code>.
   </p>
@@ -245,7 +256,7 @@ cd manuserver/manuserver_bootable_iso
   </ol>
 
   <p>Then turn it on:</p>
-<pre>./run-manuserver-in-vm.sh tunnel   virtual machine
+<pre>manuserver tunnel   virtual machine
 sudo manuserver-tunnel             real server, over ssh</pre>
   <p>
     Paste the token at the prompt — nothing appears as you paste. It says
@@ -278,7 +289,7 @@ sudo manuserver-tunnel             real server, over ssh</pre>
   <ul>
     <li>your computer going to sleep, suspending or hibernating</li>
     <li>shutting down or restarting your computer</li>
-    <li><code>./run-manuserver-in-vm.sh stop</code></li>
+    <li><code>manuserver stop</code></li>
   </ul>
   <p class="note">
     Most desktops lock the screen and then suspend a few minutes later. If you

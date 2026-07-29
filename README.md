@@ -29,17 +29,28 @@ cd manuserver/manuserver_bootable_iso
 The build script installs whatever the machine is missing (archiso, QEMU, UEFI
 firmware), so there is no setup step before it. The install boots the ISO in a
 window; answer the installer's four questions — network, username, password,
-disk.
+disk. It then offers to delete the ISO, put a `manuserver` command on your
+PATH, and delete the clone.
 
-After that the VM is the server, and runs like one:
+After that the VM is the server, and runs like one — from any directory:
 
 ```sh
-./run-manuserver-in-vm.sh            # start it (backgrounded, no window)
-./run-manuserver-in-vm.sh stop       # shut it down cleanly
-./run-manuserver-in-vm.sh status     # check on it
-./run-manuserver-in-vm.sh ssh mj     # shell on it, or http://localhost:8080
-./run-manuserver-in-vm.sh backup     # database -> backups/, restore puts it back
+manuserver            # start it (backgrounded, no window)
+manuserver stop       # shut it down cleanly
+manuserver status     # check on it
+manuserver ssh mj     # shell on it, or http://localhost:8080
+manuserver tunnel     # put it on the public internet
+manuserver backup     # database -> ~/Downloads, restore puts it back
 ```
+
+The VM and the command itself live in `~/.local/share/manuserver`, never in the
+checkout — so the clone can be moved or deleted without taking the server with
+it. Only `install` needs the clone back, because only it needs an ISO. An older
+checkout with its VM still inside migrates itself on the next command.
+
+Database backups go to `~/Downloads` instead, on the grounds that the whole
+point of one is copying it somewhere safe, and a hidden directory is a poor
+place to keep something you are meant to notice.
 
 `install` erases the VM and everything on it, so it asks you to type `ERASE`
 first. Take a backup before you do.

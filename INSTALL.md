@@ -57,39 +57,62 @@ Then it installs. This takes a few minutes. When it finishes, press enter. The
 virtual machine window closes on its own — that is normal, and it is how the
 install disk gets out of the way.
 
-At the end you are asked whether to delete the ISO file. It is about 1 GB and
-you do not need it anymore, unless you want to install again later or put it on
-a USB stick. If you are unsure, just press enter to keep it.
-
 Close the virtual machine window when the install is done.
 
-## Step 4: Start the server
+## Step 4: Tidy up
+
+The installer then asks you three things. Pressing enter to each gives a sensible
+answer, so you can ignore this section if you want to.
+
+1. **Delete the ISO?** About 1 GB, and only worth keeping if you plan to install
+   again or write a USB stick. Defaults to keeping it.
+2. **Install the `manuserver` command?** Says yes by default, and puts
+   `manuserver` on your PATH so every command below works from any folder,
+   instead of only from inside this one.
+3. **Delete the cloned repo?** Only offered once the command is installed, and
+   never if you have uncommitted or unpushed work in it. Defaults to keeping it.
+
+Saying yes to all three leaves you with a working server, a `manuserver`
+command, and nothing in your Downloads folder.
+
+**Your server does not live in the clone.** The virtual machine is in
+`~/.local/share/manuserver`, and database backups go to your **Downloads**
+folder where you can see them. Moving or deleting the clone cannot take either
+with it. If you had installed before this change, the first command you run
+moves them for you and says so.
+
+The one thing that does need the clone is installing again, because that needs an
+ISO. Clone it back from GitHub if you ever want to.
+
+## Step 5: Start the server
 
 ```sh
-./run-manuserver-in-vm.sh
+manuserver
 ```
 
 That is all. There is no window and no login. The server starts on its own.
 
 ## Using it day to day
 
-Run these from the `manuserver_bootable_iso` folder:
-
 | What you want | What to type |
 | --- | --- |
-| Start the server | `./run-manuserver-in-vm.sh` |
-| Stop the server | `./run-manuserver-in-vm.sh stop` |
-| Check if it is running | `./run-manuserver-in-vm.sh status` |
-| Open a terminal on it | `./run-manuserver-in-vm.sh ssh yourname` |
-| Put it on the internet | `./run-manuserver-in-vm.sh tunnel` |
-| Save a copy of the database | `./run-manuserver-in-vm.sh backup` |
-| Put a saved copy back | `./run-manuserver-in-vm.sh restore` |
-| Watch it start up in a window | `./run-manuserver-in-vm.sh console` |
+| Start the server | `manuserver` |
+| Stop the server | `manuserver stop` |
+| Check if it is running | `manuserver status` |
+| Open a terminal on it | `manuserver ssh yourname` |
+| Put it on the internet | `manuserver tunnel` |
+| Save a copy of the database | `manuserver backup` |
+| Put a saved copy back | `manuserver restore` |
+| Watch it start up in a window | `manuserver console` |
 
 Replace `yourname` with the username you chose in step 3.
 
 Always use `stop` to shut it down. It tells the server to close everything
 properly first.
+
+If you skipped the `manuserver` command, run these from inside the
+`manuserver_bootable_iso` folder as `./run-manuserver-in-vm.sh` instead — or
+install it now with `./run-manuserver-in-vm.sh install-command`.
 
 ## Saving a copy of the database
 
@@ -97,23 +120,24 @@ The database lives inside the virtual machine. To save a copy onto your own
 computer:
 
 ```sh
-./run-manuserver-in-vm.sh backup
+manuserver backup
 ```
 
-A file appears in the `backups` folder, named by date, like
+A file appears in your **Downloads** folder, named by date, like
 `manuserver-2026-07-28-2101.sql`. That file is the whole database as plain
 text. Copy it to a USB stick now and then and you cannot lose your work.
 
 To put a saved copy back:
 
 ```sh
-./run-manuserver-in-vm.sh restore
+manuserver restore
 ```
 
-That uses the newest backup. To pick a different one, name the file:
+That uses the newest `manuserver-*.sql` in Downloads — other `.sql` files you
+happen to have there are ignored. To pick a different one, name the file:
 
 ```sh
-./run-manuserver-in-vm.sh restore backups/manuserver-2026-07-28-2101.sql
+manuserver restore ~/Downloads/manuserver-2026-07-28-2101.sql
 ```
 
 Restoring replaces what is on the server, so it asks you to confirm first.
@@ -122,9 +146,12 @@ Both commands ask for the server password, and both need the server running.
 
 ## Careful with `install`
 
-Running `./run-manuserver-in-vm.sh install` again wipes the virtual machine and
-starts from scratch — the database goes with it. It asks you to type `ERASE`
-first, so it cannot happen by accident. Take a backup before you do it anyway.
+Running `install` again wipes the virtual machine and starts from scratch — the
+database goes with it. It asks you to type `ERASE` first, so it cannot happen by
+accident. Take a backup before you do it anyway.
+
+This is the one command that needs the cloned repo and an ISO, so if you deleted
+them in step 4, clone it back and build one first.
 
 ## How to tell it worked
 
@@ -134,7 +161,7 @@ it worked — web server, PHP and database.
 If it does not load:
 
 ```sh
-./run-manuserver-in-vm.sh ssh yourname
+manuserver ssh yourname
 systemctl status nginx php-fpm postgresql manuserver-db
 ```
 
@@ -166,7 +193,7 @@ No reinstall needed. The machine has a copy of this repo at `/srv/manuserver`,
 and that copy is what it serves.
 
 ```sh
-./run-manuserver-in-vm.sh ssh yourname
+manuserver ssh yourname
 cd /srv/manuserver && sudo git pull
 sudo systemctl restart manuserver-db   # only if the database schema changed
 ```
@@ -206,7 +233,7 @@ token.
 ### 2. Turn it on
 
 ```sh
-./run-manuserver-in-vm.sh tunnel   # virtual machine
+manuserver tunnel   # virtual machine
 sudo manuserver-tunnel             # real server, over ssh
 ```
 
