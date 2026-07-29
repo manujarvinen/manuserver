@@ -325,6 +325,21 @@ Only now, with the tunnel connected, does it get an address.
 > server, where nginx listens on 80. The 8080 you use on your own computer is
 > the virtual machine's port forward, and the tunnel never sees it.
 
+**If it says "A DNS record with this name already exists":** when you added the
+site, Cloudflare imported the records it found at your old provider — including
+whatever was at the root. A tunnel needs a `CNAME` there, and DNS will not hold
+both. Go to the main dashboard (not Zero Trust) → **tastehopping.com** → **DNS →
+Records**, delete the `A`, `AAAA` or `CNAME` whose name is the bare domain, and
+save the route again.
+
+Delete only that one. Leave the `MX` records alone or the domain stops
+receiving mail, and leave the `TXT` records alone — they are SPF and domain
+verification. If that `A` record was serving a real page from cPanel, removing
+it takes that page down, which is the intention but worth knowing first.
+
+`www.tastehopping.com` is not included. If you want it, add a second route with
+`www` in the Subdomain box.
+
 The **Domain** dropdown only lists domains that are an **active zone in your
 Cloudflare account** — which is step 1 doing its work, and why there is no way
 to skip it. Saving the route makes Cloudflare write the proxied CNAME itself;
