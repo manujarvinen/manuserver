@@ -1,20 +1,13 @@
 <?php declare(strict_types=1); ?>
 <section class="block what">
-<p>tastehopping is an anonymous place for the youtube videos other people found worth keeping.</p>
+<p>an anonymous place for the youtube videos other people found worth keeping. click a name to follow
+just them.</p>
 
-<p>save one, or search randomly — but better, click a name and follow just them, and just what they enjoyed.</p>
+<p>no email, no password, no profile. joining is one click and hands you a name and one long key. the
+key <em>is</em> the account — only a hash was kept, so it cannot be given back.</p>
 
-<p>there is no email here, no password and no profile. joining takes one click and gives you a made-up
-name and one long key. the key is the account. keep it somewhere you will find it again; mail it to
-yourself if you like. lose it and that account is gone, because the server only ever stored a hash of
-it and cannot give it back.</p>
+<p>reputation is a position, not a score: 0 to 1000 against everyone else. the slider picks the part
+you want. it says <strong>new</strong> until there are enough people for that to mean anything.</p>
 
-<p>reputation is a position, not a score: 0 to 1000 by where you stand against everyone else. the slider
-under each feed picks the part of that range you want to hear from. while there are only a handful of
-people here it says <strong>new</strong> instead of a number — being top of four is a real position and
-a silly thing to print.</p>
-
-<p>an account that goes three months without being used is deleted, and everything it saved goes with
-it. this place is meant to be disposable. just visiting keeps yours alive, and a new one is always one
-click away.</p>
+<p>an account unused for three months is deleted, saves included. visiting keeps yours alive.</p>
 </section>
