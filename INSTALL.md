@@ -279,20 +279,25 @@ the token and the site keeps running locally.
 
 ## Installing on a real computer instead of a virtual machine
 
-Do step 1 and step 2 as above, then put the ISO on a USB stick:
+Do step 1 and step 2 as above, then write the `.iso` to a whole USB disk. On
+Linux use **Caligula**; on Mac or Windows use **balenaEtcher**. The device you
+select is completely overwritten.
 
 ```sh
-lsblk
+sudo pacman -S --needed caligula
 ```
 
-Look at the list and find your USB stick. Be careful: the next command erases
-whatever you point it at.
+Then, from the folder you cloned — the one the `.iso` is in:
 
 ```sh
-sudo dd bs=4M status=progress oflag=sync if=manuserver-*.iso of=/dev/sdX
+caligula burn -z none manuserver-*.iso
 ```
 
-Replace `/dev/sdX` with your USB stick from the list above.
+Naming no device is the safe way round: Caligula shows you the disks it found
+and you pick from the list, so there is no `/dev/sd…` path to mistype onto the
+wrong drive. It asks for your password when it is ready to write.
+
+`-z none` tells it the file is not compressed, which this one is not.
 
 Then start the other computer from that USB stick. The installer runs by
 itself, and asks the same four questions as in step 3.

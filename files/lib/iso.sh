@@ -127,8 +127,8 @@ Next:
   install it into a VM   ./manuserver.sh vm_install
   then run the server    ./manuserver.sh
                          ./manuserver.sh vm_stop
-  or write it to a USB   lsblk                # identify the stick first
-                         sudo dd bs=4M status=progress oflag=sync \\
-                              if=$iso of=/dev/sdX
+  or write it to a USB   caligula burn -z none $iso
+                         (pacman -S caligula; it lists the disks and you pick
+                          one, so there is no device path to mistype)
 EOF
 }
