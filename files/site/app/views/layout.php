@@ -28,8 +28,8 @@ $message = take_flash();
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title><?= h($pageTitle ?? 'tastehopping') ?></title>
 <meta name="referrer" content="no-referrer">
-<link rel="icon" href="/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/style.css">
+<link rel="icon" href="<?= h(asset('/favicon.svg')) ?>" type="image/svg+xml">
+<link rel="stylesheet" href="<?= h(asset('/style.css')) ?>">
 </head>
 <body>
 <div class="shell">
@@ -49,6 +49,6 @@ $message = take_flash();
 
   <main class="feed"><?= $content ?></main>
 </div>
-<script src="/app.js"></script>
+<script src="<?= h(asset('/app.js')) ?>"></script>
 </body>
 </html>

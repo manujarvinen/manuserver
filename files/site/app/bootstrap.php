@@ -156,6 +156,26 @@ function is_https(): bool
         || ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https';
 }
 
+/**
+ * A URL for something in the document root, stamped with when it last changed.
+ *
+ * Cloudflare caches .css and .js for four hours by default, so a deploy would
+ * otherwise leave every visitor — including you — on the previous stylesheet
+ * until it expired or somebody remembered to purge the cache by hand. The
+ * modification time in the query string makes an edited file a different URL,
+ * which nothing has cached yet.
+ *
+ * Falls back to no stamp rather than failing if the file is missing: a
+ * stylesheet that 404s is a broken page, and a stylesheet with no version is
+ * only a stale one.
+ */
+function asset(string $path): string
+{
+    $stamp = @filemtime(dirname(APP_DIR) . '/public_html' . $path);
+
+    return $stamp === false ? $path : $path . '?v=' . $stamp;
+}
+
 /** Escape for HTML. Named short because every view uses it constantly. */
 function h(?string $text): string
 {
