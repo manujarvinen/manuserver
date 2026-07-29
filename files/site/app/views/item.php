@@ -18,6 +18,10 @@ $liked = (int) ($post['liked'] ?? 0) === 1;
 $hidden = (int) ($post['hidden'] ?? 0) === 1;
 $signedIn = current_user() !== null;
 $showLike = empty($hideLike);
+
+// Votes and reports need an account that has saved something. Rather than
+// letting the click fail, the controls say why they are inert.
+$canVote = $signedIn && has_saved_anything((int) current_user()['id']);
 ?>
 <article class="item<?= $showLike ? '' : ' no-like' ?><?= $hidden ? ' is-hidden' : '' ?>">
   <?php if ($showLike): ?>
@@ -27,7 +31,9 @@ $showLike = empty($hideLike);
       <input type="hidden" name="back" value="<?= h($backTo) ?>">
       <button type="submit" class="like-box<?= $liked ? ' liked' : '' ?>"
               data-like="<?= (int) $post['id'] ?>"
-              <?= $mine ? 'disabled title="your own save"' : '' ?>><?= $liked ? 'liked' : 'like' ?></button>
+              <?php if ($mine): ?>disabled title="your own save"
+              <?php elseif ($signedIn && !$canVote): ?>disabled title="save a video of your own first"
+              <?php endif; ?>><?= $liked ? 'liked' : 'like' ?></button>
     </form>
   <?php endif; ?>
 
@@ -54,7 +60,7 @@ $showLike = empty($hideLike);
           <input type="hidden" name="post" value="<?= (int) $post['id'] ?>">
           <button type="submit" class="action">delete</button>
         </form>
-      <?php elseif ($signedIn): ?>
+      <?php elseif ($canVote): ?>
         <form method="post" action="/report" class="inline">
           <?= csrf_field() ?>
           <input type="hidden" name="post" value="<?= (int) $post['id'] ?>">

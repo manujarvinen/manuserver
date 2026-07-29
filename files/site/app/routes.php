@@ -99,6 +99,30 @@ function wants_json(): bool
     return str_contains($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json');
 }
 
+/**
+ * Voting, repping and reporting all need an account that has saved something.
+ *
+ * The views hide these controls from accounts that haven't, so reaching this
+ * means either a crafted request or a page that went stale mid-session. For a
+ * form post, say so and send them somewhere useful. For the page's own script,
+ * a 403 is enough: app.js falls back to submitting the form normally, which
+ * lands here again and shows the message.
+ */
+function require_saved_something(int $userId): void
+{
+    if (has_saved_anything($userId)) {
+        return;
+    }
+
+    if (wants_json()) {
+        http_response_code(403);
+        send_json(['error' => 'save something first']);
+    }
+
+    flash('save one video first — then you can vote, rep and report.');
+    redirect('/add');
+}
+
 /** @param array<string,mixed> $data */
 function send_json(array $data): never
 {
@@ -262,19 +286,29 @@ function do_add(): void
     redirect('/you');
 }
 
-function show_join(): void
+function show_join(string $error = ''): void
 {
     if (current_user() !== null) {
         redirect('/you');
     }
 
-    render('join', ['activeView' => 'join']);
+    mark_form_opened('join');
+    render('join', ['activeView' => 'join', 'error' => $error]);
 }
 
 function do_join(): void
 {
     if (current_user() !== null) {
         redirect('/you');
+    }
+
+    // Re-rendering the page issues a fresh timestamp, so a person who was
+    // simply too quick just presses the button again and it works. The message
+    // does not say which check failed — that would only be useful to whoever
+    // is trying to get past it.
+    if (!submission_looks_human('join')) {
+        show_join('that did not go through. give it a moment and press it again.');
+        return;
     }
 
     $account = create_account();
@@ -341,6 +375,7 @@ function do_logout(): never
 function do_like(): never
 {
     $user = require_user();
+    require_saved_something((int) $user['id']);
     $postId = (int) ($_POST['post'] ?? 0);
     $liked = toggle_like($postId, (int) $user['id']);
 
@@ -354,6 +389,7 @@ function do_like(): never
 function do_rep(): never
 {
     $user = require_user();
+    require_saved_something((int) $user['id']);
     $subject = user_by_name((string) ($_POST['user'] ?? ''));
 
     if ($subject === null) {
@@ -390,6 +426,7 @@ function do_follow(): never
 function do_report(): never
 {
     $user = require_user();
+    require_saved_something((int) $user['id']);
     report_post((int) ($_POST['post'] ?? 0), (int) $user['id']);
 
     if (wants_json()) {

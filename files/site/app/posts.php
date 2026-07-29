@@ -134,9 +134,11 @@ function feed_posts(string $view, ?int $viewerId, int $rep): array
 function user_by_name(string $name): ?array
 {
     return query_one(
-        'SELECT u.id, u.name, u.created_at, r.reputation, r.score
+        'SELECT u.id, u.name, u.created_at,
+                coalesce(r.reputation, 0) AS reputation,
+                coalesce(r.score, 0) AS score
            FROM users u
-           JOIN user_reputation r ON r.user_id = u.id
+           LEFT JOIN user_reputation r ON r.user_id = u.id
           WHERE u.name = :name',
         ['name' => $name]
     );
@@ -231,15 +233,37 @@ function toggle_like(int $postId, int $userId): bool
     execute(
         // The SELECT ... FROM posts is what enforces "you cannot like your
         // own save": no matching row means no insert, with no round trip
-        // spent asking who the author is.
+        // spent asking who the author is. The EXISTS is the same trick for
+        // "you must have saved something first" — the routes check it too, to
+        // say so out loud, but this is what makes it true.
         'INSERT INTO likes (post_id, user_id)
               SELECT :p::bigint, :u::bigint FROM posts
                WHERE id = :p2 AND user_id <> :u2
+                 AND EXISTS (SELECT 1 FROM posts mine WHERE mine.user_id = :u3)
          ON CONFLICT DO NOTHING',
-        ['p' => $postId, 'u' => $userId, 'p2' => $postId, 'u2' => $userId]
+        ['p' => $postId, 'u' => $userId, 'p2' => $postId, 'u2' => $userId, 'u3' => $userId]
     );
 
     return liked($postId, $userId);
+}
+
+/**
+ * Has this account saved anything yet?
+ *
+ * Voting, repping and reporting all wait on this. An account is free and takes
+ * one click, which makes accounts the cheapest thing on the site — and votes
+ * and reports are both denominated in accounts. Requiring one real saved video
+ * first does not make accounts harder to create; it makes empty ones worthless,
+ * which is the part that actually matters. A person saves something anyway. A
+ * script has to find a real video id and survive a round trip to YouTube for
+ * every account it wants to vote with.
+ */
+function has_saved_anything(int $userId): bool
+{
+    return query_one(
+        'SELECT 1 AS yes FROM posts WHERE user_id = :id LIMIT 1',
+        ['id' => $userId]
+    ) !== null;
 }
 
 function liked(int $postId, int $userId): bool
@@ -300,11 +324,14 @@ function toggle_rep(int $voterId, int $subjectId): bool
     }
 
     execute(
-        'INSERT INTO rep_votes (voter_id, subject_id) VALUES (:a, :b) ON CONFLICT DO NOTHING',
-        ['a' => $voterId, 'b' => $subjectId]
+        'INSERT INTO rep_votes (voter_id, subject_id)
+              SELECT :a::bigint, :b::bigint
+               WHERE EXISTS (SELECT 1 FROM posts mine WHERE mine.user_id = :a2)
+         ON CONFLICT DO NOTHING',
+        ['a' => $voterId, 'b' => $subjectId, 'a2' => $voterId]
     );
 
-    return true;
+    return gave_rep($voterId, $subjectId);
 }
 
 function gave_rep(int $voterId, int $subjectId): bool
@@ -329,8 +356,9 @@ function report_post(int $postId, int $userId): void
         'INSERT INTO reports (post_id, user_id)
               SELECT :p::bigint, :u::bigint FROM posts
                WHERE id = :p2 AND user_id <> :u2
+                 AND EXISTS (SELECT 1 FROM posts mine WHERE mine.user_id = :u3)
          ON CONFLICT DO NOTHING',
-        ['p' => $postId, 'u' => $userId, 'p2' => $postId, 'u2' => $userId]
+        ['p' => $postId, 'u' => $userId, 'p2' => $postId, 'u2' => $userId, 'u3' => $userId]
     );
 }
 
@@ -344,8 +372,11 @@ function report_post(int $postId, int $userId): void
 function export_account(int $userId): array
 {
     $user = query_one(
-        'SELECT u.name, u.created_at, r.reputation, r.score
-           FROM users u JOIN user_reputation r ON r.user_id = u.id
+        'SELECT u.name, u.created_at,
+                coalesce(r.reputation, 0) AS reputation,
+                coalesce(r.score, 0) AS score
+           FROM users u
+           LEFT JOIN user_reputation r ON r.user_id = u.id
           WHERE u.id = :id',
         ['id' => $userId]
     ) ?? [];

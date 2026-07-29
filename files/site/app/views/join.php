@@ -1,5 +1,15 @@
-<?php declare(strict_types=1); ?>
+<?php
+/**
+ * @var string|null $error
+ */
+
+declare(strict_types=1);
+?>
 <section class="block form-block">
+  <?php if (!empty($error)): ?>
+    <p class="warn"><?= h($error) ?></p>
+  <?php endif; ?>
+
   <p class="note">joining asks you for nothing. press the button and the server invents a name for you
   and hands you one key. no email, no password, no name of your own.</p>
 
@@ -9,6 +19,7 @@
 
   <form method="post" action="/join" class="stack">
     <?= csrf_field() ?>
+    <?= honeypot_field() ?>
     <button type="submit" class="framed-action">make me an account</button>
   </form>
 

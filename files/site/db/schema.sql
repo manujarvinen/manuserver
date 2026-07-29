@@ -138,7 +138,16 @@ LEFT JOIN (
     SELECT subject_id, count(*) AS n
     FROM rep_votes
     GROUP BY subject_id
-) v ON v.subject_id = u.id;
+) v ON v.subject_id = u.id
+-- Only accounts that have saved something are ranked at all.
+--
+-- This is what stops a pile of empty accounts distorting the scale. Reputation
+-- is a percentile, so a million registrations with nothing in them would push
+-- every real person into the top of the range and leave the slider selecting
+-- the same handful of people everywhere you moved it. An account that has not
+-- saved anything has expressed no taste, so it has no position among people
+-- who have.
+WHERE EXISTS (SELECT 1 FROM posts p WHERE p.user_id = u.id);
 
 -- The number the reputation slider filters on, and the only reputation the
 -- site ever displays.

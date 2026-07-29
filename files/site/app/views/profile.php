@@ -21,6 +21,10 @@ $backTo .= $page > 0 ? '?page=' . $page : '';
 $hideLike = $self;
 $more = ($page + 1) * PAGE_SIZE < $total;
 $signedIn = current_user() !== null;
+
+// Reputation is a vote, so it waits on the same thing likes and reports do.
+// Following does not — it only changes what you yourself see.
+$canVote = $signedIn && has_saved_anything((int) current_user()['id']);
 ?>
 <section class="block">
   <?php if ($posts === []): ?>
@@ -52,12 +56,16 @@ $signedIn = current_user() !== null;
         <span>@<?= h($name) ?> · <span data-rep-count><?= (int) $profile['reputation'] ?></span> rep · <?= (int) $total ?> saved</span>
 
         <?php if ($signedIn): ?>
-          <form method="post" action="/rep" class="inline">
-            <?= csrf_field() ?>
-            <input type="hidden" name="user" value="<?= h($name) ?>">
-            <input type="hidden" name="back" value="<?= h($backTo) ?>">
-            <button type="submit" class="framed-action<?= $repGiven ? ' given' : '' ?>" data-rep><?= $repGiven ? 'rep given' : 'give rep' ?></button>
-          </form>
+          <?php if ($canVote): ?>
+            <form method="post" action="/rep" class="inline">
+              <?= csrf_field() ?>
+              <input type="hidden" name="user" value="<?= h($name) ?>">
+              <input type="hidden" name="back" value="<?= h($backTo) ?>">
+              <button type="submit" class="framed-action<?= $repGiven ? ' given' : '' ?>" data-rep><?= $repGiven ? 'rep given' : 'give rep' ?></button>
+            </form>
+          <?php else: ?>
+            <a class="action" href="/add">save a video to give rep</a>
+          <?php endif; ?>
 
           <form method="post" action="/follow" class="inline">
             <?= csrf_field() ?>

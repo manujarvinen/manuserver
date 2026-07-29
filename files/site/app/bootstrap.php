@@ -200,6 +200,65 @@ function require_csrf(): void
     }
 }
 
+// --- telling a person from a script ------------------------------------------
+//
+// Two checks, both free and both invisible to anyone actually reading the page.
+// Neither is strong on its own. Together they cost a script the two things it
+// is trying to avoid spending: time, and attention to the page it is posting to.
+//
+// Deliberately not a CAPTCHA. This site loads nothing from anyone else, and a
+// challenge widget would be a third party watching every visitor arrive — on a
+// site whose whole claim is that nobody is watching.
+
+/** Below this many seconds between opening a form and sending it, it wasn't read. */
+const MIN_FORM_SECONDS = 2;
+
+/** Above this, the page has been sitting open long enough to be stale. */
+const MAX_FORM_SECONDS = 3600;
+
+/** Remember when a form went on screen. */
+function mark_form_opened(string $form): void
+{
+    $_SESSION['form_opened'][$form] = time();
+}
+
+/**
+ * Was this submission plausibly typed by a person?
+ *
+ * The timestamp lives in the session rather than in the form, so there is
+ * nothing for a script to read off the page and replay. It is consumed on use:
+ * one rendered form buys one submission, which is what stops a single fetch of
+ * the page being turned into a thousand posts.
+ *
+ * The honeypot is a text input hidden with CSS. A person never sees it and a
+ * browser never fills it. It is named `email` because form-fillers reach for
+ * that one first, and because this site has no use for the real thing.
+ */
+function submission_looks_human(string $form): bool
+{
+    $opened = $_SESSION['form_opened'][$form] ?? null;
+    unset($_SESSION['form_opened'][$form]);
+
+    if (!is_int($opened)) {
+        return false;
+    }
+
+    $elapsed = time() - $opened;
+
+    if ($elapsed < MIN_FORM_SECONDS || $elapsed > MAX_FORM_SECONDS) {
+        return false;
+    }
+
+    return trim((string) ($_POST['email'] ?? '')) === '';
+}
+
+/** The honeypot input. Rendered inside the form it protects. */
+function honeypot_field(): string
+{
+    return '<input class="hp" type="text" name="email" value="" tabindex="-1"'
+        . ' autocomplete="off" aria-hidden="true">';
+}
+
 /**
  * "3h ago". Whole units only — nobody needs the minutes on a two-day-old post.
  */

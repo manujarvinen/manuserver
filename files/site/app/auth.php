@@ -153,10 +153,13 @@ function current_user(): ?array
         return null;
     }
 
+    // LEFT JOIN, because user_reputation only ranks accounts that have saved
+    // something. A brand new account is not in it yet, and an inner join here
+    // would log them straight back out.
     $user = query_one(
-        'SELECT u.id, u.name, r.reputation
+        'SELECT u.id, u.name, coalesce(r.reputation, 0) AS reputation
            FROM users u
-           JOIN user_reputation r ON r.user_id = u.id
+           LEFT JOIN user_reputation r ON r.user_id = u.id
           WHERE u.id = :id',
         ['id' => $id]
     );
