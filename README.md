@@ -29,6 +29,8 @@ manuserver site_dev     # run the website here instead, no VM involved
 
 `./manuserver.sh --help` lists the rest.
 
+- **[The quickstart](https://www.manujarvinen.com/manuserver)** — the short
+  version, on the website. Start here.
 - **[INSTALL.md](INSTALL.md)** — every step in plain English, including
   Cloudflare.
 - **[CLAUDE.md](CLAUDE.md)** — how it is put together, and why.
@@ -44,6 +46,5 @@ files/site/                the website — public_html, app, db/schema.sql
 files/deploy/              what runs on the server after it is installed
 files/dev/                 helpers for running the site without the VM
 files/promo/               a page describing this project, hosted elsewhere
-files/references/          design references — logo, colours, screen layouts
-files/work-files/          source files for the visuals (Krita)
+files/references/          the layout the website was drawn from
 ```

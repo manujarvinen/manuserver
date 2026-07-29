@@ -16,7 +16,7 @@
 #
 # Slot indices chosen so that slot 0 (the background) is the maroon: a plain
 # screen clear then paints the whole terminal correctly and no manual fill is
-# ever needed. Hex values sampled from references/visuals_manuserver.png.
+# ever needed. Hex values were sampled from the original design mockup.
 
 readonly PAL_BG=2E1522     # 0  background
 readonly PAL_LOGO=8F0B45   # 1  logo
@@ -431,8 +431,9 @@ ui_menu() {
   done
 }
 
-# ui_confirm <yes-label> <no-label> — two toggle buttons, styled after
-# references/ref_wipe_disk.png. Defaults to No; returns 0 for yes, 1 for no.
+# ui_confirm <yes-label> <no-label> — two toggle buttons, styled after the
+# disk-wipe screen in the original mockup. Defaults to No; returns 0 for yes,
+# 1 for no.
 #
 # y and n move the selection, they do not submit. The only thing this is used
 # for is erasing a disk, and a single mistyped key should never be enough to

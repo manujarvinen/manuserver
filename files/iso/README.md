@@ -47,6 +47,7 @@ overlay/root/         copied verbatim into the ISO's airootfs
   lib/network.sh      wired detection, wifi scan and connect
   lib/disk.sh         enumeration, confirmation, partitioning
   lib/install.sh      pacstrap, chroot config, bootloader, repo hook
+manuserver_logo.txt   block-ASCII logo, baked into the medium at build time
 build/                generated scratch space, not in git
 ```
 
@@ -55,7 +56,7 @@ It takes archiso's stock `releng` profile, drops `overlay/` onto its airootfs,
 renames the medium, and runs mkarchiso. The finished ISO lands in the repo
 root.
 
-The logo comes from `files/references/manuserver_logo.txt` and is copied into
+The logo comes from `files/iso/manuserver_logo.txt` and is copied into
 the ISO at build time. It has to be: the installer runs from the live medium
 long before the repo exists on the machine.
 

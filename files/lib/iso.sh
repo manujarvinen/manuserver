@@ -18,7 +18,7 @@ readonly RELENG=/usr/share/archiso/configs/releng
 cmd_build_iso() {
   local profile="$ISO_DIR/build/profile"
   local work="$ISO_DIR/build/work"
-  local logo="$ROOT/files/references/manuserver_logo.txt"
+  local logo="$ISO_DIR/manuserver_logo.txt"
   local iso_label avail pkg iso
 
   # 11 characters is the hard limit for a FAT volume label, and archiso uses
