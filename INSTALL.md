@@ -306,11 +306,18 @@ address every run, and rate limited. `Ctrl-C`, then
 
 Only now, with the tunnel connected, does it get an address.
 
-6. Back in **Networking → Tunnels**, open your tunnel and go to the **Routes**
-   tab → **Add route** → **Published application**.
-7. Leave the subdomain blank for the bare domain, choose `tastehopping.com`
-   from the **Domain** dropdown, and set **Service URL** to
-   `http://localhost:80`. Save.
+6. Go to **Networking → Tunnels** and **click your tunnel's name** to open it.
+   On *its* **Routes** tab, select **Add route** → **Published application**.
+7. Under **Hostname**, leave the subdomain blank for the bare domain and choose
+   `tastehopping.com` from the dropdown. Set **Service URL** to
+   `http://localhost:80`. Select **Add route**.
+
+> **There are two pages called Routes and only one of them is this.**
+> **Networking → Routes** — the one in the left-hand menu, with the CIDR and
+> Hostname routes tabs — is for reaching private IP ranges through the WARP
+> client. It has no option for publishing a website, and nothing you do there
+> will help. The Routes tab you want appears only after you open an individual
+> tunnel.
 
 That dropdown only lists domains that are an **active zone in your Cloudflare
 account** — which is step 1 doing its work, and why there is no way to skip it.
