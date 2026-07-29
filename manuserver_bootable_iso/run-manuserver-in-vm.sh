@@ -87,6 +87,23 @@ readonly DISK_SIZE=20G
 readonly SSH_PORT=2222
 readonly HTTP_PORT=8080
 
+# What the forwarded ports listen on.
+#
+# QEMU's hostfwd takes the host address before the port, and leaving it empty
+# — as this did — binds to 0.0.0.0. That put the VM's sshd in front of the
+# whole local network: any device on the wifi could reach it on 2222 and guess
+# passwords at it, unrated and unlogged. Nobody asked for that, and ssh here is
+# always from this machine.
+readonly SSH_BIND=127.0.0.1
+
+# The site is the one thing you might genuinely want to open on your phone, so
+# this is a knob rather than a constant. It still defaults to closed:
+#
+#   MANUSERVER_HTTP_BIND=0.0.0.0 manuserver
+#
+# The public route is the Cloudflare tunnel, which needs none of this.
+readonly HTTP_BIND="${MANUSERVER_HTTP_BIND:-127.0.0.1}"
+
 die() { printf '%s: %s\n' "$SELF" "$*" >&2; exit 1; }
 say() { printf '==> %s\n' "$*"; }
 
@@ -224,7 +241,7 @@ base_args() {
     -drive "if=pflash,format=raw,readonly=on,file=$OVMF_CODE" \
     -drive "if=pflash,format=raw,file=$NVRAM" \
     -drive "if=virtio,format=qcow2,file=$DISK" \
-    -netdev "user,id=net0,hostfwd=tcp::$SSH_PORT-:22,hostfwd=tcp::$HTTP_PORT-:80" \
+    -netdev "user,id=net0,hostfwd=tcp:$SSH_BIND:$SSH_PORT-:22,hostfwd=tcp:$HTTP_BIND:$HTTP_PORT-:80" \
     -device "virtio-net-pci,netdev=net0"
 }
 
@@ -493,7 +510,13 @@ cmd_stop() {
 cmd_status() {
   if vm_running; then
     say "running (pid $(vm_pid))"
-    printf '    ssh    localhost:%s\n    http   localhost:%s\n' "$SSH_PORT" "$HTTP_PORT"
+    printf '    ssh    %s:%s\n    http   http://%s:%s\n' \
+      "$SSH_BIND" "$SSH_PORT" "$HTTP_BIND" "$HTTP_PORT"
+
+    # Worth saying out loud, since it is the difference between "only this
+    # machine" and "anyone on the wifi".
+    [[ $HTTP_BIND == 0.0.0.0 ]] &&
+      printf '           reachable from the local network (MANUSERVER_HTTP_BIND)\n'
   else
     say "not running"
     [[ -f $DISK ]] || printf '    no disk installed yet — run: %s install\n' "$SELF"

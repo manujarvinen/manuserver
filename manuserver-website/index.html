@@ -312,7 +312,15 @@ sudo manuserver-tunnel             real server, over ssh</pre>
     <li>
       <strong>Root is locked</strong>, so everything goes through
       <code>sudo</code>: one account, one password, one audit trail. Your
-      password is never written to a file, not even a temporary one.
+      password is never written to a file, not even a temporary one — it is
+      piped straight into the command that hashes it, memory-hard, in
+      <code>/etc/shadow</code>.
+    </li>
+    <li>
+      <strong>The virtual machine is bound to your own computer</strong>, so
+      neither the site nor SSH is visible to the rest of your network unless
+      you ask for it. SSH also drops to three tries per connection, twenty
+      seconds to use them, and no root login at all.
     </li>
     <li>
       <strong>There is no database password</strong>, so there is none to leak.
@@ -351,8 +359,13 @@ sudo manuserver-tunnel             real server, over ssh</pre>
       certificate; they sit in the middle.
     </li>
     <li>
-      <strong>SSH takes a password</strong> on your local network, and
-      <strong>the disk is not encrypted</strong>.
+      <strong>A real home server is on your network</strong>, and its SSH takes
+      a password — worth replacing with a key, which is two commands. In a
+      virtual machine this does not apply.
+    </li>
+    <li>
+      <strong>The disk is not encrypted.</strong> Whoever holds the machine can
+      read the database.
     </li>
     <li>
       <strong>Nobody moderates.</strong> Posts vanish once enough separate

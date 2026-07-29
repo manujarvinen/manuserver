@@ -231,6 +231,46 @@ ExecStart=/bin/bash $SITE_DIR/server/deploy/db-setup.sh
 WantedBy=multi-user.target
 UNIT
 
+# --- ssh ---------------------------------------------------------------------
+#
+# The ISO enables sshd with Arch's defaults, which on a real home server means
+# password authentication facing the whole local network with no rate limit.
+# In a VM the forwards are bound to 127.0.0.1 so this matters less, but the
+# same repo provisions both.
+#
+# Passwords stay on, deliberately. Turning them off here would lock you out of
+# a machine that has no key on it yet — the last line of the file below is how
+# you switch, once you have one.
+
+step 'hardening ssh'
+
+write /etc/ssh/sshd_config.d/10-manuserver.conf <<'SSHD'
+# Written by server/deploy/provision.sh. Edits here are lost on reprovision.
+
+# Six guesses per connection is the default. Reconnecting is free either way,
+# so this is not a rate limit — it just makes each attempt cost more setup.
+MaxAuthTries 3
+
+# An unauthenticated connection has 2 minutes by default to become an
+# authenticated one. It does not need that long.
+LoginGraceTime 20
+
+# Root is already locked by the installer. This is the second lock.
+PermitRootLogin no
+
+# Nothing here has a display, and nothing needs a tunnel through this host.
+X11Forwarding no
+AllowAgentForwarding no
+
+# Once you have copied a key over — ssh-copy-id yourname@the-server — password
+# logins can go away entirely:
+#
+#   echo 'PasswordAuthentication no' | sudo tee /etc/ssh/sshd_config.d/20-no-passwords.conf
+#   sudo systemctl restart sshd
+#
+# Do it in that order, and keep this session open until a new one works.
+SSHD
+
 # --- the public tunnel -------------------------------------------------------
 #
 # Installed ready and switched off. The unit below is enabled unconditionally,

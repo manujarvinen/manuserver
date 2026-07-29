@@ -47,8 +47,10 @@ A window opens and the installer starts by itself. It asks you four things:
    password.
 2. **Username.** Lowercase letters, numbers, dash and underscore only. Must
    start with a letter or underscore.
-3. **Password.** You type it twice. Press `Ctrl-R` to show what you typed, in
-   case you are unsure.
+3. **Password.** You type it twice, and it must be at least 8 characters.
+   Press `Ctrl-R` to show what you typed, in case you are unsure. Three or four
+   unrelated words are far stronger than one clever word, and this is the only
+   thing protecting the machine from anyone who can reach it.
 4. **Disk.** Inside the virtual machine there is only one disk, so it picks it
    for you. It then asks you to confirm that it may erase it. Use the arrow
    keys to choose **Yes, format disk**, then press enter.
@@ -113,6 +115,31 @@ properly first.
 If you skipped the `manuserver` command, run these from inside the
 `manuserver_bootable_iso` folder as `./run-manuserver-in-vm.sh` instead — or
 install it now with `./run-manuserver-in-vm.sh install-command`.
+
+## Reaching it from other devices
+
+The virtual machine's ports are bound to **this computer only**, so neither the
+site nor SSH is visible to the rest of your network. To let other devices on the
+network open the site:
+
+```sh
+MANUSERVER_HTTP_BIND=0.0.0.0 manuserver
+```
+
+SSH stays on this computer either way. `manuserver status` tells you which of
+the two you are running. For reaching it from outside the house, use the tunnel
+further down — it needs none of this.
+
+On a real home server there is no such wrapper: it is on your network, and its
+SSH accepts a password. Once you can log in, copying a key over and turning
+passwords off takes two commands:
+
+```sh
+ssh-copy-id yourname@the-server
+ssh yourname@the-server "echo 'PasswordAuthentication no' | sudo tee /etc/ssh/sshd_config.d/20-no-passwords.conf && sudo systemctl restart sshd"
+```
+
+Keep your existing session open until you have confirmed a new one works.
 
 ## Saving a copy of the database
 

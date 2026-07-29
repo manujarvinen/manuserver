@@ -70,6 +70,15 @@ ask_username() {
   done
 }
 
+# The only thing between this machine and anyone who can reach its sshd.
+#
+# Eight is a floor, not a target — the hint below is where the real advice is.
+# chpasswd stores a yescrypt hash, which is memory-hard and about as good as
+# this gets, so an offline attack on it is decided entirely by how much the
+# password had in it to begin with. Length is what supplies that; cleverness
+# mostly is not.
+readonly PASSWORD_MIN=8
+
 ask_password() {
   local first
   while :; do
@@ -77,8 +86,18 @@ ask_password() {
     ui_body "Set the password for this account."
     ui_body "It is also the sudo password — root itself will be locked."
     ui_blank
+    ui_body "Three or four unrelated words beat one clever word."
+    ui_blank
     ui_input "Password" 1
     first=$UI_RESULT
+
+    if ((${#first} < PASSWORD_MIN)); then
+      ui_blank
+      ui_body "Too short — $PASSWORD_MIN characters at the very least."
+      ui_blank
+      ui_pause "press enter to try again"
+      continue
+    fi
 
     ui_screen
     ui_body "Once more, to be sure."
