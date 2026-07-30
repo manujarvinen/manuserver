@@ -3,8 +3,16 @@
 
 declare(strict_types=1);
 
-/** Where the reputation slider sits before anyone has touched it. */
-const DEFAULT_REP = 500;
+/**
+ * Where the reputation slider sits before anyone has touched it.
+ *
+ * 0, the bottom, because the slider is a floor: the default has to be the
+ * setting that hides nobody. At 500 a visitor's first view of the site was
+ * silently missing everyone below halfway, including every account that had
+ * saved something but not yet been liked — which on a young site is all of
+ * them.
+ */
+const DEFAULT_REP = 0;
 
 /** The feeds that are just a list of posts with a slider under them. */
 const FEED_VIEWS = ['new', 'popular', 'random', 'follows'];

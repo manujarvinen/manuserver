@@ -124,6 +124,17 @@ Design decisions that are load-bearing, not incidental:
 - **Reputation is a percentile**, not a raw score, over accounts that have saved
   something. A raw score sits near zero for everyone on a young site and the
   slider selects nothing across its whole range.
+- **The slider is a floor, not a window.** 0 is everyone, 1000 is only the top,
+  and the default is 0 because the default has to hide nobody. It used to pick
+  a band either side of the handle, backed by a floor of the five nearest
+  accounts so the band could never come back empty — and that floor is what
+  made it wrong. Until an account has been liked its score is 0, so on a young
+  site *every* account sits at reputation 0, none of them fall in a band around
+  500, and the tie-break served the five oldest. A newcomer's first save was
+  invisible wherever the slider went. Removing the floor without changing the
+  semantics is not the fix either: measured on a young site, band-only left 91
+  of 101 slider positions empty. A percentile can always give an ordering; on a
+  degenerate scale it cannot name a neighbourhood.
 - **Voting, repping and reporting need an account that has saved a video.**
   Accounts are free, and votes and reports are denominated in accounts. This
   makes empty ones worthless rather than making accounts hard to create, so

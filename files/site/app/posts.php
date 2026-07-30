@@ -4,37 +4,32 @@
 declare(strict_types=1);
 
 /**
- * How far either side of the slider counts as "people like this" before the
- * band is widened to reach a usable number of them.
- */
-const REP_BAND = 90;
-
-/** The smallest number of accounts a feed will draw from. */
-const REP_MIN_MATCHES = 5;
-
-/**
- * The accounts whose reputation sits near where the slider is.
+ * The accounts at or above where the slider is.
  *
- * Everyone inside the tight band qualifies; if that is fewer than five people
- * — which it always is on a young site, and often is at the ends of the
- * scale — the nearest five are taken instead. Without that floor the slider
- * has dead zones that look like the site is broken.
+ * The slider is a floor, not a window: 0 is everybody, 500 is everybody from
+ * the halfway mark up, 1000 is only the top. That is what a control labelled
+ * "user reputation" reads as, and it is the only reading with no dead zones —
+ * whatever else is true, 0 always matches everyone.
+ *
+ * It used to select a band either side of the handle, with a floor of the five
+ * nearest accounts so the band could never come back empty. Two things were
+ * wrong with that. The floor quietly ignored the slider: at the default of 500
+ * on a site where nobody has been liked yet, every account sits at reputation
+ * 0, no one is in the band, and the "nearest five" tie-break on user_id served
+ * up the five *oldest* accounts — so a newcomer's first save was invisible no
+ * matter where the slider went. And without the floor the same site had 91 of
+ * 101 slider positions showing nothing at all.
+ *
+ * Both were symptoms of asking a percentile to name a neighbourhood while the
+ * scale is degenerate. A floor asks it for an ordering instead, which is the
+ * one thing percent_rank is always good for.
  *
  * @return list<int>
  */
 function matched_user_ids(int $rep): array
 {
     $rows = query(
-        'WITH target AS (SELECT :rep::int AS rep),
-              tight AS (
-                  SELECT count(*) AS n
-                    FROM user_reputation, target
-                   WHERE abs(reputation - target.rep) <= ' . REP_BAND . '
-              )
-         SELECT ur.user_id
-           FROM user_reputation ur, target
-          ORDER BY abs(ur.reputation - target.rep), ur.user_id
-          LIMIT (SELECT greatest(' . REP_MIN_MATCHES . ', n) FROM tight)',
+        'SELECT user_id FROM user_reputation WHERE reputation >= :rep ORDER BY user_id',
         ['rep' => $rep]
     );
 
