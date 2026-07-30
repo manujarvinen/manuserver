@@ -117,6 +117,13 @@ Design decisions that are load-bearing, not incidental:
 - **There is no database password.** php-fpm runs as `http`, and a `pg_ident`
   map makes `http` the `tastehopping` role over a unix socket. Postgres accepts
   nothing from the network. A credential that does not exist cannot leak.
+- **The tunnel token is the only secret anywhere**, and it lives in
+  `/etc/manuserver/tunnel.env` on the server, root-only. It is never an
+  argument, so it cannot reach a shell history or a process list, and
+  `pg_dumpall` does not touch `/etc`, so it is not in backups either. It *is*
+  part of the disk: the VM's `.qcow2` carries it, and so would any full-disk
+  image. Anything added here that needs a secret should aim for the same
+  shape — or better, for not needing one, as the database does.
 - **An account is a name and a key.** 32 bytes from the CSPRNG, of which only
   `sha256()` is stored — so the key is shown on exactly one screen and is
   unrecoverable by design. Plain SHA-256 rather than a slow KDF is correct here:

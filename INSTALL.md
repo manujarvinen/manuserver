@@ -233,6 +233,11 @@ Copy that file off the machine afterwards — a backup sitting on the disk it is
 a backup of is not one. Restoring replaces everything currently in the
 database, and nothing asks you to confirm.
 
+A backup is readable text and holds every saved video and every account name,
+so treat it as private. It does **not** let anyone log in as those accounts:
+only the SHA-256 of each key is stored, never the key. Nor does it contain the
+tunnel token, which lives in `/etc/manuserver/` and not in the database.
+
 ## Careful with `vm_install`
 
 Running `vm_install` again wipes the virtual machine and starts from scratch — the
@@ -415,6 +420,11 @@ token and the site keeps running locally.
 - The server has to be running, or visitors get a Cloudflare error page — see
   below for replacing that with something friendlier.
 - It survives reboots. `install` erases the token along with everything else.
+- The token is stored on the server, in `/etc/manuserver/tunnel.env`, readable
+  only by root. It is never in this repo, never in your shell history and never
+  in a database backup — but it is part of the disk. Copying the whole disk, or
+  the virtual machine's `.qcow2` image, copies the token with it. If you ever
+  hand either to someone, run `tunnel off` first or take a new token afterwards.
 
 ## A page for when the server is off
 

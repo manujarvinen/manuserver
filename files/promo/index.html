@@ -270,6 +270,13 @@ sudo -u postgres psql -f backup.sql                 put it back</pre>
     account, Cloudflare can see the traffic it carries, and the disk is not
     encrypted.
   </p>
+  <p class="note">
+    The one secret on the machine is the tunnel token, in
+    <code>/etc/manuserver/tunnel.env</code>. It never reaches this repo, your
+    shell history or a database backup — but it is part of the disk, so a copy
+    of the whole disk or of the virtual machine's image carries it too. On a
+    real computer, SSH also accepts a password until you copy a key over.
+  </p>
 
   <footer>
     Full instructions, and the code:
