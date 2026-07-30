@@ -34,6 +34,7 @@ manuserver site_dev     # run the website here instead, no VM involved
 
 - **[INSTALL.md](INSTALL.md)** — every step in plain English, including
   Cloudflare.
+- **[TODO.md](TODO.md)** — what is unfinished and what has never been tested.
 - **[CLAUDE.md](CLAUDE.md)** — how it is put together, and why.
 - **[files/iso/README.md](files/iso/README.md)** — what is inside the ISO.
 
