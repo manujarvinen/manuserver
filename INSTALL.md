@@ -53,6 +53,13 @@ A window opens and the installer starts by itself. It asks you four things:
    password.
 2. **Username.** Lowercase letters, numbers, dash and underscore only. Must
    start with a letter or underscore.
+
+   **Pick a different one from the username on your own computer.** Commands
+   like `manuserver backup` reach across to the server and ask for a password
+   partway through — the server's, not this machine's. When both accounts are
+   called the same thing there is nothing in the prompt to tell you which, and
+   the natural guess is the wrong one. Two different names and the prompt
+   answers the question by itself.
 3. **Password.** You type it twice, and it must be at least 8 characters.
    Press `Ctrl-R` to show what you typed, in case you are unsure. Three or four
    unrelated words are far stronger than one clever word, and this is the only
@@ -184,6 +191,12 @@ Both need the server running, and both ask for the server password twice: once
 for `ssh` and once for `sudo` on the far end. That is the whole of it — the
 connection is reused for the several round trips a backup takes, rather than
 authenticating again for each.
+
+**Every password these ask for is the server's**, never this computer's, even
+though you are sitting at this computer and typed the command here. If the two
+machines use the same username the prompt says the same word either way and
+gives you no way to tell them apart. Different usernames on the two machines
+and this stops being a question you have to think about.
 
 To stop the `ssh` half asking at all, give the server a key of its own:
 

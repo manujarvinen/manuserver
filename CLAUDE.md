@@ -74,6 +74,15 @@ Host-side state lives outside the checkout: the VM in
 `~/.local/share/manuserver/vm`, backups in `~/Downloads` — visible, because the
 point of a backup is copying it somewhere safe.
 
+`backup`, `restore`, `ssh` and `tunnel` take the **server's** username and
+default to `$USER`, the one on the machine you are typing on. Nothing remembers
+what the server calls you. So the documents tell people to choose a *different*
+username at install time, and that advice is about more than the argument: the
+password prompt that appears partway through a backup is the server's `sudo`,
+asked from your terminal, and with matching usernames there is nothing in it to
+say so. Anything added here that prompts across the connection inherits the same
+problem.
+
 `ssh_opts` pins `SSH_KEY` (`~/.ssh/id_ed25519_manuserver`, or
 `MANUSERVER_SSH_KEY`) with `IdentitiesOnly`. Left to itself ssh walks its
 default names and offers whatever it finds, which on a machine keeping several

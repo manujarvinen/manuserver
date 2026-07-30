@@ -118,6 +118,13 @@ cd manuserver
     <code>manuserver</code> command, and to delete the <code>.iso</code> and the
     clone. Neither is needed to run the server.
   </p>
+  <p class="note">
+    <strong>Give the server a different username from the one on your own
+    computer.</strong> These commands run on your machine but reach across to
+    the server, and the password they ask for partway through is the server's.
+    With the same name on both, the prompt looks identical whichever one is
+    asking, and the obvious guess is the wrong one.
+  </p>
 
   <h2>How to use in 64-bit PC</h2>
   <p class="note">
@@ -145,6 +152,12 @@ manuserver restore       put the newest saved one back</pre>
     No window opens; it runs in the background, the way a server does. The site
     is at <a href="http://localhost:8080">localhost:8080</a>.
   </p>
+  <p class="note">
+    The <code>mj</code> in those lines is the username on <em>the server</em>,
+    and so is every password they ask for — you are at your own computer, but
+    nothing here is asking about it. This reads much more clearly when the two
+    machines are not both called the same thing.
+  </p>
 
   <h2>Running it in 64-bit PC</h2>
   <p>
@@ -164,8 +177,10 @@ sudo -u postgres pg_dumpall --clean &gt; backup.sql   save the database
 sudo -u postgres psql -f backup.sql                 put it back</pre>
   <p class="note">
     <code>mj</code> and the password are the ones you gave the installer, not
-    your own computer's. Copy that backup file off the machine and you cannot
-    lose the database. Putting one back replaces everything currently in it.
+    your own computer's — which is far easier to keep straight if you did not
+    give the two machines the same username. Copy that backup file off the
+    machine and you cannot lose the database. Putting one back replaces
+    everything currently in it.
   </p>
   <p class="note">
     The <code>manuserver</code> command drives a virtual machine from outside,

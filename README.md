@@ -19,6 +19,11 @@ cd manuserver
 ./manuserver.sh vm_install    # install that ISO into a VM
 ```
 
+The installer asks for a username. **Give the server a different one from your
+account here.** These commands reach across and ask for the *server's* password
+partway through; when both accounts share a name, nothing in the prompt tells
+you which machine is asking.
+
 Then the VM is the server, and `manuserver` runs it from anywhere:
 
 ```sh

@@ -47,6 +47,14 @@ work. On a server installed under a different name they do not, and the failure
 reads as `Permission denied (publickey,password)` — which looks like a key
 problem and is not. Pass the name: `manuserver backup johnson`.
 
+**Matching them is the worse trade, though.** Every password these commands ask
+for is the server's, asked from your own terminal. When both machines call you
+the same thing the prompt is identical either way and there is nothing to tell
+you which one wants the password — and the natural guess is the local one. The
+convenience of a bare `manuserver backup` costs a doubt every single time.
+INSTALL.md and README.md now say to pick a different name at install time; this
+VM is `mj` on both, which is the case worth not repeating.
+
 ## 2. Things that have never been tested
 
 **The ISO.** `files/iso/overlay/root/installer.sh` gained an 8-character
