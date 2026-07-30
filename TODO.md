@@ -5,26 +5,12 @@ Written 2026-07-30, after the first end-to-end run. **tastehopping.com is live**
 a valid certificate. Everything below is what has *not* been done or *not* been
 tested.
 
-## 1. Two one-line jobs, neither done
+## 1. Nothing outstanding here
 
-```sh
-cd /path/to/manuserver && ./manuserver.sh install_command
-```
+Everything in this section is done. The next thing worth doing is §2 — build
+the ISO, then a clean-room install.
 
-**The installed `manuserver` is out of date.** `restore`, `wordmark` and the
-ssh key pinning were all changed in the checkout on 2026-07-30, and host-side
-changes do not travel by themselves. Must be run from inside the clone; from
-anywhere else there is no `./manuserver.sh`.
-
-```sh
-git push
-```
-
-Not urgent — the commits are host-side and docs, so nothing on the server is
-waiting for them. It matters before any *new* install, because the installer
-clones from GitHub.
-
-### Already done, 2026-07-30
+### Done, 2026-07-30
 
 **Provisioning re-run.** The nginx side landed: the font comes back with
 `max-age=31536000`. Check it from outside with a cache-buster, or you are
@@ -49,6 +35,17 @@ the rest of `~/.ssh`. `MANUSERVER_SSH_KEY` overrides the path.
 This cannot live in `~/.ssh/config`: `Match` has no `port` attribute, so a rule
 cannot be scoped to the forwarded port, and `Host localhost` would capture
 every other local connection.
+
+**`install_command` re-run and everything pushed.** The installed copy now has
+the `restore` fix, `wordmark`, and the key pinning.
+
+### One thing to know about usernames
+
+`backup`, `restore`, `ssh` and `tunnel` all take the **server's** username and
+default to the one on *your* machine. They match here, so the bare commands
+work. On a server installed under a different name they do not, and the failure
+reads as `Permission denied (publickey,password)` — which looks like a key
+problem and is not. Pass the name: `manuserver backup johnson`.
 
 ## 2. Things that have never been tested
 
