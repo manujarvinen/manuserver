@@ -185,6 +185,43 @@ any of them.
 directory and it renders every config file there and skips pacman, initdb and
 systemctl.
 
+## Picking this up on a machine that has never seen it
+
+This file says how the thing is built. **[TODO.md](TODO.md) says where it
+currently stands** — what has been tested, what has not, and what was decided
+and why. Read it second; it is the only record of state, because the machine
+this was developed on is expected to be wiped.
+
+A fresh clone is enough. Nothing else survives a wipe and nothing else needs to:
+
+- **The VM does not come with you.** It lives in `~/.local/share/manuserver`,
+  not the checkout. On a new machine there is no server until `build_iso` and
+  `vm_install` make one. `install_command` likewise: a clone has no
+  `manuserver` on PATH until you run it.
+- **Backups do not come with you either** — `~/Downloads`, outside the repo, on
+  purpose. Restoring one onto a freshly installed server is
+  `manuserver restore <file>`, or on bare metal
+  `sudo -u postgres psql -f backup.sql`.
+- **The Cloudflare tunnel and the offline Worker live at Cloudflare**, not
+  here. The Worker survives any number of wipes. The tunnel token does not —
+  it is only ever on the server, and `manuserver-tunnel off` deletes it. Take a
+  new one from the dashboard.
+
+What has to be installed, and nothing does until you need it:
+
+| To run | You need |
+|---|---|
+| `build_iso` | Arch, and about 15 GB free. It installs archiso and qemu itself. |
+| `site_dev`, `site_seed` | `postgresql` and `php-pgsql` |
+| `files/dev/offline-worker-test.mjs` | node 22 or newer |
+
+**One thing a clone will not tell you.** This repo's own remote was
+`git@github-manujarvinen:manujarvinen/manuserver.git` — an alias defined in one
+person's `~/.ssh/config`, not anything GitHub knows about. A fresh clone from
+the https URL will fetch fine and fail to push with an authentication error
+that looks like a permissions problem and is not. Set up whichever remote and
+key you actually have.
+
 ## Style
 
 Bash is `set -euo pipefail` and shellcheck-clean. PHP is `declare(strict_types=1)`,

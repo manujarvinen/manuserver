@@ -110,6 +110,58 @@ The clean-room run narrows what is left here. The installer, `provision.sh`,
 nothing; what bare metal adds is real firmware, a real disk and real wifi —
 the parts a VM cannot stand in for.
 
+### The plan: wipe this machine and install onto it
+
+The machine this was all developed on — hostname `arch`, a Micro Computer (HK)
+Tech mini PC — is itself the bare-metal target. It is going to be wiped for
+Omarchy 4.0 eventually, so an install onto it costs nothing that is not already
+being thrown away.
+
+**It is also the machine the VM runs on.** Wiping it destroys the live server,
+which is fine and intended, but it means four things have to leave the disk
+first. In this order:
+
+1. **A fresh database backup, copied off the machine.** `manuserver backup`,
+   then put the `.sql` on a USB stick. A backup sitting on the disk you are
+   about to erase is not a backup. Check the age of what is already in
+   `~/Downloads` — the one there on 2026-07-30 was four hours stale within an
+   evening, holding 5 posts when the site was serving 8.
+2. **The ISO, written to USB.** Building one needs an Arch host, and after the
+   wipe this *is* the only Arch host. Wipe first and there is nothing left to
+   build the installer with.
+3. **The Cloudflare tunnel token — not saved, just known about.** It lives only
+   on the machine and `manuserver-tunnel off` deletes it. Get a fresh one from
+   the Cloudflare dashboard afterwards; there is no file to rescue.
+4. **Everything pushed.** GitHub is the only copy that survives.
+
+The site is down for the whole wipe and reinstall, and that is now survivable:
+the offline Worker was deployed hours before this plan existed, so visitors get
+the resting-machine page rather than a Cloudflare error.
+
+**What this actually tests**, in rough order of how likely it is to be the
+thing that breaks:
+
+- **`disk_part_suffix` on NVMe** (`files/iso/overlay/root/lib/disk.sh`). It
+  branches on the device name: `sd*`/`vd*` give `vda1`, while `nvme*`/`mmcblk*`
+  need a `p` — `nvme0n1p1`. Every install so far has been `/dev/vda`, so the
+  `p` branch has never once run. A mini PC is almost certainly NVMe. Wrong here
+  means `mkfs` failing several steps later on a path that does not exist.
+- **The disk menu, with a footgun.** One disk is shown rather than asked about;
+  with the USB stick attached there are two, so the menu runs for the first
+  time. `disk_candidates` filters on `type == disk`, and **a USB stick is type
+  disk** — the stick you booted from appears in the list. Pick by the size and
+  model that `disk_describe` prints, never by position.
+- **Wifi.** `iw`/`iwd` scanning has never run; every install used the cable
+  path. Use ethernet for the first attempt so a disk problem and a wifi problem
+  cannot be mistaken for each other, then test wifi on a second run.
+- **`linux-firmware` mattering.** Installed all along, irrelevant in a VM.
+- **Firmware settings.** UEFI on, Secure Boot off. The installer refuses BIOS
+  outright rather than installing something that will not boot.
+
+**Afterwards there is no host side.** No `manuserver` command, no `site_dev`,
+no `build_iso` except by cloning onto the server and building there. Restoring
+the backup is Postgres directly: `sudo -u postgres psql -f backup.sql`.
+
 **The offline Worker.** `files/deploy/offline-worker.js` now has a test —
 `node files/dev/offline-worker-test.mjs`, 43 assertions, no dependencies. It
 imports the Worker unmodified, stubs global fetch as the origin and asks what a

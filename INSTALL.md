@@ -500,3 +500,16 @@ try again, type `bash /root/installer.sh`.
 
 **The server will not stop.** If `stop` gives up after a minute, the machine is
 probably still starting. Wait a moment and try again.
+
+## Where the rest of it is written down
+
+This document is how to *use* it. Two others cover the parts this one leaves
+out, and both matter if you intend to change anything:
+
+- **[CLAUDE.md](CLAUDE.md)** — how it is put together and why, including the
+  rules that break quietly if you do not know them. It is written for whoever
+  changes this next, human or otherwise.
+- **[TODO.md](TODO.md)** — what has actually been tested and what has not, and
+  the decisions behind things that look arbitrary. It is the only record of
+  state: the machine this was developed on is expected to be wiped, so
+  anything not written there is gone.
