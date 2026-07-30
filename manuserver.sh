@@ -10,10 +10,11 @@
 #   ./manuserver.sh vm_console       boot it in a window, to watch it boot
 #   ./manuserver.sh ssh [user]       open a shell on it
 #   ./manuserver.sh tunnel [on|off|status]   put the site on the internet
-#   ./manuserver.sh backup           save the database to ~/Downloads
-#   ./manuserver.sh restore [file]   put a saved database back
+#   ./manuserver.sh backup [user]    save the database to ~/Downloads
+#   ./manuserver.sh restore [file|user]   put a saved database back
 #   ./manuserver.sh site_dev         run the website here, without the VM
 #   ./manuserver.sh site_seed        fill the local database with test accounts
+#   ./manuserver.sh wordmark         re-copy the logo into the offline page
 #   ./manuserver.sh install_command  put `manuserver` on your PATH
 #
 # With no argument it starts the server, because that is the thing you do most.
@@ -78,6 +79,7 @@ case "${1:-vm_start}" in
   site_dev)         needs_checkout site_dev; shift; cmd_site_dev "$@" ;;
   site_seed)        needs_checkout site_seed; cmd_site_seed ;;
   site_reset)       needs_checkout site_reset; cmd_site_reset ;;
+  wordmark)         needs_checkout wordmark; cmd_wordmark ;;
   install_command)  cmd_install_command ;;
   -h|--help|help)
     # The header comment is the help text; print it up to the first line that

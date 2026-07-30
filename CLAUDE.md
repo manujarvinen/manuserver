@@ -61,7 +61,7 @@ ownership of the whole checkout, `.git` included.
 | `host-tools.sh` | installs missing host packages |
 | `vm.sh` | `vm_*`, `ssh`, `tunnel`, `backup`, `restore`, `install_command` |
 | `iso.sh` | `build_iso` — checkout only |
-| `site.sh` | `site_dev`, `site_seed` — checkout only |
+| `site.sh` | `site_dev`, `site_seed`, `wordmark` — checkout only |
 
 `install_command` **copies** the script and `files/lib/` into
 `~/.local/share/manuserver/bin/` and symlinks `~/.local/bin/manuserver` at the
@@ -125,8 +125,11 @@ not reach the origin. A 500 from PHP passes through untouched, because that
 means the server answered and the site is broken, which is a different thing
 and should look like one.
 
-The wordmark is inlined, copied from `files/promo/manuserver.svg`. If that file
-changes, this copy does not follow.
+The wordmark is inlined, copied from `files/promo/manuserver.svg`, because a
+page that answers when the origin is unreachable cannot fetch an asset from it.
+The copy does not follow the original by itself — `./manuserver.sh wordmark`
+re-derives it, and INSTALL.md puts that step before deploying the Worker, which
+is the only moment the copy actually ships.
 
 ## Running it here
 

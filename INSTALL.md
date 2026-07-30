@@ -173,6 +173,11 @@ happen to have there are ignored. To pick a different one, name the file:
 manuserver restore ~/Downloads/manuserver-2026-07-28-2101.sql
 ```
 
+If the username on the server is not the one on this computer, both commands
+take it: `manuserver backup yourname`, `manuserver restore yourname`. A single
+word that is not a file it can find is read as a username, so `restore yourname`
+does what it looks like it does — with the newest backup, as above.
+
 Restoring replaces what is on the server, so it asks you to confirm first.
 
 Both need the server running, and both ask for the server password twice: once
@@ -396,6 +401,16 @@ Cloudflare cannot reach it at all. Then it serves the manuserver wordmark and a
 short note saying the machine is off and nothing has been lost. The whole page
 is self-contained — no stylesheet, no font, no image — because it has to render
 on the one occasion your server cannot be asked for anything.
+
+Because it can fetch nothing, the wordmark is a copy of the one in
+`files/promo/manuserver.svg` pasted into the Worker. Run this first and it
+stays a copy of the current one:
+
+```sh
+./manuserver.sh wordmark
+```
+
+It says so if the two already match, and rewrites the Worker if they do not.
 
 1. In the Cloudflare dashboard go to **Workers & Pages → Create → Worker**.
    Name it `tastehopping-offline` and deploy the starter.

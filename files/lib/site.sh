@@ -145,3 +145,66 @@ cmd_site_reset() {
   site_ensure_database
   say "empty again"
 }
+
+# --- the wordmark ----------------------------------------------------------
+#
+# files/deploy/offline-worker.js carries an inlined copy of the path data in
+# files/promo/manuserver.svg. It has to: the Worker answers when Cloudflare
+# cannot reach the origin, so it cannot fetch an asset from the site it is
+# standing in for. One file, no requests, or it is not an offline page.
+#
+# That makes it a copy, and copies drift. This re-derives it from the SVG, so
+# keeping the two together is a command you run before deploying the Worker
+# rather than something you notice months later on the one page nobody sees.
+
+readonly WORDMARK_SVG="$ROOT/files/promo/manuserver.svg"
+readonly WORDMARK_COPY="$ROOT/files/deploy/offline-worker.js"
+
+# The first `d="…"` attribute in the file. Anchored on a preceding space so it
+# cannot match the `d="` inside Inkscape's `id="path1"`.
+wordmark_path() {
+  awk '
+    match($0, /(^|[[:space:]])d="[^"]*"/) {
+      seg = substr($0, RSTART, RLENGTH)
+      print substr(seg, index(seg, "d=\"") + 3, length(seg) - index(seg, "d=\"") - 3)
+      exit
+    }
+  ' "$1"
+}
+
+cmd_wordmark() {
+  local source_d copy_d tmp
+
+  [[ -r $WORDMARK_SVG ]]  || die "not found: $WORDMARK_SVG"
+  [[ -r $WORDMARK_COPY ]] || die "not found: $WORDMARK_COPY"
+
+  source_d=$(wordmark_path "$WORDMARK_SVG")
+  [[ -n $source_d ]] || die "no path data in $WORDMARK_SVG"
+
+  copy_d=$(wordmark_path "$WORDMARK_COPY")
+  [[ -n $copy_d ]] || die "no inlined path data in $WORDMARK_COPY"
+
+  if [[ $source_d == "$copy_d" ]]; then
+    say "the wordmark in the offline page matches files/promo/manuserver.svg"
+    return
+  fi
+
+  # Substituted through an awk variable, not a sed replacement: the path data
+  # is a thousand characters of slashes and commas and would need escaping.
+  tmp=$(mktemp)
+  awk -v new="$source_d" '
+    !done && match($0, /(^|[[:space:]])d="[^"]*"/) {
+      seg = substr($0, RSTART, RLENGTH)
+      at  = index(seg, "d=\"")
+      print substr($0, 1, RSTART - 1) substr(seg, 1, at - 1) "d=\"" new "\"" \
+            substr($0, RSTART + RLENGTH)
+      done = 1
+      next
+    }
+    { print }
+  ' "$WORDMARK_COPY" >"$tmp" || { rm -f "$tmp"; die "could not rewrite $WORDMARK_COPY"; }
+
+  cat "$tmp" >"$WORDMARK_COPY"
+  rm -f "$tmp"
+  say "updated the wordmark in $(basename "$WORDMARK_COPY") — redeploy the Worker"
+}

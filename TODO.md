@@ -5,33 +5,27 @@ Written 2026-07-30, after the first end-to-end run. **tastehopping.com is live**
 a valid certificate. Everything below is what has *not* been done or *not* been
 tested.
 
-## 1. Re-run provisioning on the server
+## 1. Re-run provisioning on the server — done, mostly verified
 
-The running VM was provisioned before several changes to
-`files/deploy/provision.sh`. **Confirmed missing:** the nginx `/fonts/` rule —
-the typeface is currently served with `max-age=14400` instead of a year.
-**Possibly missing:** the account pruner, which cannot be checked from outside.
+Re-provisioned and rebooted 2026-07-30. The nginx side landed: the font comes
+back with `max-age=31536000`.
+
+Check it from outside with a cache-buster, or you are reading Cloudflare's
+four-hour copy of the old header rather than the server:
+
+```sh
+curl -sI "https://tastehopping.com/fonts/geomini-latin.woff2?cb=$RANDOM" | grep -i cache
+```
+
+**Still unconfirmed:** the account pruner, which cannot be seen from outside.
+Until the timer is installed accounts are never deleted, and the three-month
+rule is stated on the join page, on `/what` and on the promo page. One command
+on the server settles it:
 
 ```sh
 manuserver ssh mj
-cd /srv/manuserver && sudo git pull
-sudo bash files/deploy/provision.sh
-sudo reboot
-```
-
-Then check it took:
-
-```sh
 systemctl status manuserver-prune.timer     # expect: active (waiting)
-curl -sI https://tastehopping.com/fonts/geomini-latin.woff2 | grep -i cache
 ```
-
-`max-age=31536000` on the font means the nginx side landed.
-
-> **This is the one with a consequence.** Until the timer is installed,
-> accounts are never deleted. The three-month rule is stated on the join page,
-> on `/what` and on the promo page, so right now the site makes a promise it is
-> not keeping.
 
 ## 2. Things that have never been tested
 
@@ -60,16 +54,10 @@ steps are in INSTALL.md under *A page for when the server is off*. Test with
 
 ## 3. Known, small, deliberate
 
-- **`manuserver restore` argument order.** It takes the file first and the
-  username second, so `manuserver restore mj` reads `mj` as a filename. Only
-  matters if the server username differs from the one on your own machine.
 - **`REPORT_THRESHOLD` is 3** (`files/site/app/bootstrap.php`). Three accounts
   can permanently hide any post, and reports are one-way with no undo. Now that
   voting requires having saved a video this is much more expensive to abuse
   than it was, but three is still a low number.
-- **The wordmark is duplicated.** `files/deploy/offline-worker.js` carries an
-  inlined copy of the path data from `files/promo/manuserver.svg`. Change that
-  file and the copy does not follow.
 - **SSH still asks for a password.** A backup costs two prompts, `ssh` then
   `sudo`. Removing the first is one command, run once:
   ```sh
@@ -77,6 +65,12 @@ steps are in INSTALL.md under *A page for when the server is off*. Test with
   ```
   The `sudo` prompt should stay — it is what stops anyone at an unlocked
   terminal reading the database off the machine.
+
+Two entries that used to live here are now fixed rather than tolerated:
+`restore` reads a bare word that is not a file as a username, so
+`manuserver restore mj` works; and `./manuserver.sh wordmark` re-derives the
+offline page's inlined logo from `files/promo/manuserver.svg` instead of
+leaving the two to drift.
 
 ## 4. Worth knowing before changing anything
 
