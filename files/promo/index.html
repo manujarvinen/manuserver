@@ -109,7 +109,8 @@
 
   <h2>How to use in Virtual Machine</h2>
   <p class="note">
-    <strong>Give the server a different username from the one on your own
+    <strong>When you are doing the step <code>./manuserver.sh vm_install</code>,
+    give the server a different username from the one on your own
     computer.</strong> These commands run on your machine but reach across to
     the server, and the password they ask for partway through is the server's.
     With the same name on both, the prompt looks identical whichever one is
@@ -128,8 +129,9 @@ cd manuserver
 
   <h2>How to use in 64-bit PC</h2>
   <p class="note">
-    <strong>Give the server a different username from the one on your own
-    computer.</strong> You will nearly always be reaching this machine over
+    <strong>When the installer asks you the four questions, give the server a
+    different username from the one on your own computer.</strong> You will
+    nearly always be reaching this machine over
     <code>ssh</code> from another one, and once you are in, every prompt —
     <code>sudo</code>, a database dump, a restore — belongs to the server. With
     the same name on both, nothing on screen tells you which machine you are
