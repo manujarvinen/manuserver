@@ -145,6 +145,11 @@ not reach the origin. A 500 from PHP passes through untouched, because that
 means the server answered and the site is broken, which is a different thing
 and should look like one.
 
+`node files/dev/offline-worker-test.mjs` checks exactly that, and is worth
+running before any deploy: this is the one file in the repo that can take the
+site down while the server is up. It needs no dependencies and asserts the
+boundaries either side of the 520-530 band.
+
 The wordmark is inlined, copied from `files/promo/manuserver.svg`, because a
 page that answers when the origin is unreachable cannot fetch an asset from it.
 The copy does not follow the original by itself — `./manuserver.sh wordmark`

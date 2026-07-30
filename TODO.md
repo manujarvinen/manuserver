@@ -108,11 +108,17 @@ The clean-room run narrows what is left here. The installer, `provision.sh`,
 nothing; what bare metal adds is real firmware, a real disk and real wifi —
 the parts a VM cannot stand in for.
 
-**The offline Worker.** `files/deploy/offline-worker.js` is written and its
-status rules were walked through by hand against eleven codes, but *no test for
-that lives in the repo* — there is no test file and nothing inline, so nothing
-re-checks the rules if they change. It has never been deployed to Cloudflare
-and has never seen a real outage.
+**The offline Worker.** `files/deploy/offline-worker.js` now has a test —
+`node files/dev/offline-worker-test.mjs`, 43 assertions, no dependencies. It
+imports the Worker unmodified, stubs global fetch as the origin and asks what a
+visitor would get: all thirteen unreachable codes become the offline page, and
+200, 301, 404, 418, 500, 501, 503, 505, 519, 531 and 599 pass through with the
+origin's own body. 519 and 531 are there on purpose — they sit either side of
+the 520-530 band and catch an off-by-one.
+
+It still **has never been deployed to Cloudflare and has never seen a real
+outage.** A test says the rules are what they were meant to be; it says nothing
+about the route matching, or about Cloudflare invoking the Worker at all.
 
 Run `./manuserver.sh wordmark` first, then the deploy steps in INSTALL.md under
 *A page for when the server is off*. Test with `manuserver stop`, then load
