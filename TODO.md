@@ -59,34 +59,54 @@ repeating, and worth fixing whenever it is next reinstalled.
 
 ## 2. Things that have never been tested
 
-**The ISO.** Two things in `files/iso/overlay/root/` have never been built into
-an ISO or run: the 8-character minimum password, and the username screen — a
-placeholder in the input field and two lines saying to pick a name you do not
-use on your own computer.
+**The clean-room install was run on 2026-07-30 and it worked, start to
+finish.** Fresh clone from GitHub into `/home/mj/manuserver-cleanroom-src`,
+`build_iso` there, `vm_install` into a second VM under
+`XDG_DATA_HOME=/home/mj/manuserver-cleanroom`, username `johnson`. So the whole
+chain — clone → `build_iso` → `vm_install` → clone on the target →
+`provision.sh` → first boot → site up — is no longer theory.
 
-**The ISO built on 2026-07-30 at 20:07 predates the username change**, so it
-needs building again before it is worth installing: `./manuserver.sh build_iso`
-(5-20 min).
+Confirmed on that machine, on its **first** boot, with nothing done by hand:
 
-Worth watching for on the username screen, since it is drawn by hand: the
-placeholder must vanish on the first keystroke, pressing enter on an untouched
-field must be refused rather than accepted as a name, and backspacing back to
-empty should bring the placeholder back.
+- nginx serving, PHP rendering, Postgres answering — the page comes back with
+  its title and a session cookie, which means `db-setup.sh` built the role, the
+  database and the schema at boot.
+- `/fonts/` returns `max-age=31536000`. This is the rule that was *missing* on
+  the live server and needed a manual re-provision, so it is the one that most
+  needed proving.
+- `/index.php` returns 404 — only the router executes.
+- `manuserver-prune.timer` is `active (waiting)`. On the live server this had to
+  be taken on trust for a day.
+- `manuserver-tunnel.service` is loaded and enabled but `inactive (dead)`,
+  which is right: off until it is given a token.
+- The installer's username screen and the 8-character password minimum both
+  behaved, and the shell prompt reads `johnson@manuserver` — which is the whole
+  argument for two different usernames, visible in one line.
 
-**A clean-room install.** The original plan — clone fresh into another
-directory, build, install — was never carried out. It is the only thing that
-exercises the whole chain: clone → `build_iso` → `vm_install` → clone on the
-target → `provision.sh` → first boot → site up. Every part has worked
-individually; the sequence has not been run start to finish from nothing.
+Two notes for whoever runs the next one:
 
-Push before starting one, or it tests the previous commit: both clones come
-from GitHub, the fresh checkout and the one the installer makes on the target.
+- **Answer `n` to "Install the `manuserver` command".** It follows
+  `XDG_DATA_HOME`, so accepting repoints `~/.local/bin/manuserver` at the
+  clean-room copy and breaks the command for the real server. Saying no also
+  suppresses the delete-the-clone offer, deliberately — `vm.sh:231` will not
+  offer to delete the only thing that can still reach the new VM.
+- **Push first**, or it tests the previous commit: both clones come from
+  GitHub, the fresh checkout and the one the installer makes on the target.
+
+The `hostname` binary is not installed on the built machine — nothing in this
+repo calls it, `/etc/hostname` is set, and the prompt proves it. Noted only so
+nobody reads its absence as a fault.
 
 **Bare metal.** No install onto a physical machine has happened. The USB
 instructions (Caligula) and the *Running it in 64-bit PC* sections of both
 documents are written from the code, not from having done it. The `ssh` and
 `sudo -u postgres` commands there are the same ones the VM path runs remotely,
 so they should hold, but nobody has checked.
+
+The clean-room run narrows what is left here. The installer, `provision.sh`,
+`db-setup.sh` and first boot are all now proven on a machine built from
+nothing; what bare metal adds is real firmware, a real disk and real wifi —
+the parts a VM cannot stand in for.
 
 **The offline Worker.** `files/deploy/offline-worker.js` is written and its
 status rules were walked through by hand against eleven codes, but *no test for
