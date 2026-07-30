@@ -7,8 +7,10 @@ tested.
 
 ## 1. Nothing outstanding here
 
-Everything in this section is done, and so is the clean-room install in §2.
-What is left is bare metal and the offline Worker.
+Everything in this section is done, and so is the clean-room install and the
+offline Worker in §2. **The only untested thing left in the whole repo is an
+install onto a physical machine** — and that is the one thing a VM cannot
+stand in for.
 
 ### Done, 2026-07-30
 
@@ -116,18 +118,25 @@ visitor would get: all thirteen unreachable codes become the offline page, and
 origin's own body. 519 and 531 are there on purpose — they sit either side of
 the 520-530 band and catch an off-by-one.
 
-It still **has never been deployed to Cloudflare and has never seen a real
-outage.** A test says the rules are what they were meant to be; it says nothing
-about the route matching, or about Cloudflare invoking the Worker at all.
+**It is deployed and it works, 2026-07-30.** Routed on the apex and on `www`,
+tested against a server that was actually switched off: visitors got the
+offline page instead of Cloudflare's 1033. With the server back up, the apex
+and `www` both return 200 and `/nope` still returns the origin's own 404 — so
+it is passing through and intercepting only what it should.
 
-Run `./manuserver.sh wordmark` first, then the deploy steps in INSTALL.md under
-*A page for when the server is off*. Test with `manuserver stop`, then load
-the site.
+That closes the last thing this repo could test on its own. **Turning the
+server off is no longer a thing to avoid**: a maintenance window now looks like
+a page that says the machine is resting, which is what it always should have
+looked like. The clean-room install earlier the same day took the site down
+with nothing in front of it; the next one will not.
 
-Deploying it is the one item here that can break a working site: it is code in
-front of the origin, on a route matching every URL. If the site ever misbehaves
-in a way the server cannot explain, remove the route before looking anywhere
-else.
+Two things it still has not seen: a *real* outage nobody planned, and a
+Cloudflare-side failure rather than an origin-side one.
+
+**It is code in front of a working system.** If the site ever misbehaves in a
+way the server cannot explain, remove the route before looking anywhere else.
+Run `node files/dev/offline-worker-test.mjs` and `./manuserver.sh wordmark`
+before redeploying it.
 
 ## 3. Known, small, deliberate
 
