@@ -63,6 +63,12 @@ readonly DISK_SIZE=20G
 readonly SSH_PORT=2222
 readonly HTTP_PORT=8080
 
+# The key `manuserver ssh` offers, and the only one it offers — see ssh_opts.
+# Its own key, not a reused one: this server is not GitHub and should not be
+# reachable by the thing that is. Missing is fine; ssh asks for a password
+# instead. Override to use a key you already have.
+readonly SSH_KEY="${MANUSERVER_SSH_KEY:-$HOME/.ssh/id_ed25519_manuserver}"
+
 # What the forwarded ports listen on.
 #
 # QEMU's hostfwd takes the host address before the port, and leaving it empty

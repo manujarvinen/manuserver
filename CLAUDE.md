@@ -74,6 +74,14 @@ Host-side state lives outside the checkout: the VM in
 `~/.local/share/manuserver/vm`, backups in `~/Downloads` — visible, because the
 point of a backup is copying it somewhere safe.
 
+`ssh_opts` pins `SSH_KEY` (`~/.ssh/id_ed25519_manuserver`, or
+`MANUSERVER_SSH_KEY`) with `IdentitiesOnly`. Left to itself ssh walks its
+default names and offers whatever it finds, which on a machine keeping several
+identities apart presents one of them to a server with no business seeing it.
+`~/.ssh/config` cannot express the same rule: `Match` has no `port` attribute,
+and `Host localhost` would capture every other local connection. If the key is
+absent, ssh asks for a password — the behaviour from before it existed.
+
 ## The site
 
 Plain PHP against Postgres. No framework, no Composer, nothing to install.

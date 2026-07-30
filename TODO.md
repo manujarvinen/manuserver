@@ -5,56 +5,50 @@ Written 2026-07-30, after the first end-to-end run. **tastehopping.com is live**
 a valid certificate. Everything below is what has *not* been done or *not* been
 tested.
 
-## 1. Four one-line jobs, none of them done
-
-In this order. The first is the only one with a consequence today; the rest
-make the next hour cheaper.
-
-```sh
-manuserver ssh mj
-systemctl status manuserver-prune.timer     # expect: active (waiting)
-```
-
-**The account pruner is still unconfirmed.** It cannot be seen from outside the
-machine, and until the timer is installed accounts are never deleted — while
-the three-month rule is stated on the join page, on `/what` and on the promo
-page. The site is either keeping that promise or it is not, and nobody has
-looked.
-
-```sh
-ssh-copy-id -p 2222 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null mj@localhost
-```
-
-Stops `ssh` asking for a password, so the check above and every backup is one
-prompt instead of two. The `sudo` prompt stays — see §3.
+## 1. Two one-line jobs, neither done
 
 ```sh
 cd /path/to/manuserver && ./manuserver.sh install_command
 ```
 
-**The installed `manuserver` is out of date.** `restore` and `wordmark` were
-changed in the checkout on 2026-07-30 and host-side changes do not travel by
-themselves. Must be run from inside the clone; from anywhere else there is no
-`./manuserver.sh`.
+**The installed `manuserver` is out of date.** `restore`, `wordmark` and the
+ssh key pinning were all changed in the checkout on 2026-07-30, and host-side
+changes do not travel by themselves. Must be run from inside the clone; from
+anywhere else there is no `./manuserver.sh`.
 
 ```sh
 git push
 ```
 
-Not urgent — the commit is host-side and docs, so nothing on the server is
-waiting for it. It matters before any *new* install, because the installer
+Not urgent — the commits are host-side and docs, so nothing on the server is
+waiting for them. It matters before any *new* install, because the installer
 clones from GitHub.
 
-### Already done
+### Already done, 2026-07-30
 
-Re-provisioned and rebooted 2026-07-30. The nginx side landed: the font comes
-back with `max-age=31536000`. Check it from outside with a cache-buster, or you
-are reading Cloudflare's four-hour copy of the old header rather than the
-server, which is what made it look like the change had not taken:
+**Provisioning re-run.** The nginx side landed: the font comes back with
+`max-age=31536000`. Check it from outside with a cache-buster, or you are
+reading Cloudflare's four-hour copy of the old header rather than the server,
+which is what made it look like the change had not taken:
 
 ```sh
 curl -sI "https://tastehopping.com/fonts/geomini-latin.woff2?cb=$RANDOM" | grep -i cache
 ```
+
+**The account pruner is confirmed.** `manuserver-prune.timer` is
+`active (waiting)` and fires daily. The three-month rule on the join page, on
+`/what` and on the promo page is being kept.
+
+**The VM has its own ssh key.** It previously authorised a *GitHub* key, from a
+`ssh-copy-id` that installed whichever key it found first. `authorized_keys`
+now holds one key, `~/.ssh/id_ed25519_manuserver`, which exists for this and
+nothing else; the GitHub key no longer authenticates. `ssh_opts` pins it with
+`IdentitiesOnly`, so `manuserver` offers that key or a password and never walks
+the rest of `~/.ssh`. `MANUSERVER_SSH_KEY` overrides the path.
+
+This cannot live in `~/.ssh/config`: `Match` has no `port` attribute, so a rule
+cannot be scoped to the forwarded port, and `Host localhost` would capture
+every other local connection.
 
 ## 2. Things that have never been tested
 
@@ -99,9 +93,9 @@ else.
   can permanently hide any post, and reports are one-way with no undo. Now that
   voting requires having saved a video this is much more expensive to abuse
   than it was, but three is still a low number.
-- **`sudo` on the server asks for a password**, so a backup costs a prompt even
-  once the `ssh` key in §1 is copied. That one should stay — it is what stops
-  anyone at an unlocked terminal reading the database off the machine.
+- **`sudo` on the server asks for a password**, so a backup still costs one
+  prompt now that the `ssh` half is a key. That one should stay — it is what
+  stops anyone at an unlocked terminal reading the database off the machine.
 
 Two entries that used to live here are now fixed rather than tolerated:
 `restore` reads a bare word that is not a file as a username, so

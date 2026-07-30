@@ -436,6 +436,16 @@ cmd_vm_status() {
 # %C is a hash of user, host and port. A unix socket path cannot exceed about
 # a hundred characters, and the literal form (%r@%h:%p) plus a home directory
 # gets uncomfortably close.
+#
+# The key is pinned rather than left to ssh's own search. Left alone, ssh walks
+# its default names and offers whatever it finds — on a machine that keeps
+# several identities apart on purpose, that quietly presents one of them to a
+# server that has no business seeing it. `IdentitiesOnly` says: this key or a
+# password, nothing else.
+#
+# ~/.ssh/config cannot express this. Its `Match` has no `port` attribute, so
+# there is no way to scope a rule to the forwarded port, and `Host localhost`
+# would capture every other local connection too.
 ssh_opts() {
   mkdir -p "$DATA_HOME"
 
@@ -447,6 +457,12 @@ ssh_opts() {
     -o ControlMaster=auto \
     -o ControlPath="$DATA_HOME/ssh-%C" \
     -o ControlPersist=30s
+
+  # Absent, ssh falls back to asking for the password, which is the behaviour
+  # this had before any key existed.
+  [[ -r $SSH_KEY ]] && printf '%s\n' -i "$SSH_KEY" -o IdentitiesOnly=yes
+
+  return 0
 }
 
 cmd_ssh() {

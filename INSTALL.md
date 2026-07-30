@@ -185,10 +185,23 @@ for `ssh` and once for `sudo` on the far end. That is the whole of it — the
 connection is reused for the several round trips a backup takes, rather than
 authenticating again for each.
 
-To stop the `ssh` half asking at all, copy a key over once:
+To stop the `ssh` half asking at all, give the server a key of its own:
 
 ```sh
-ssh-copy-id -p 2222 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null mj@localhost
+ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519_manuserver -N '' -C manuserver
+ssh-copy-id -i ~/.ssh/id_ed25519_manuserver.pub -p 2222 \
+  -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null yourname@localhost
+```
+
+`manuserver` picks that path up on its own, and offers **only** that key. Name
+`-i` explicitly as above: without it `ssh-copy-id` installs whichever key it
+finds first, which on a machine holding more than one identity is unlikely to
+be the one you meant.
+
+Use a key you already have by pointing at it instead:
+
+```sh
+MANUSERVER_SSH_KEY=~/.ssh/some_other_key manuserver backup
 ```
 
 `sudo` still asks, which is correct — it is what stops anyone who finds your
