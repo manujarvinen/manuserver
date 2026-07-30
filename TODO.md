@@ -52,8 +52,10 @@ for is the server's, asked from your own terminal. When both machines call you
 the same thing the prompt is identical either way and there is nothing to tell
 you which one wants the password — and the natural guess is the local one. The
 convenience of a bare `manuserver backup` costs a doubt every single time.
-INSTALL.md and README.md now say to pick a different name at install time; this
-VM is `mj` on both, which is the case worth not repeating.
+INSTALL.md, README.md and the promo page now say to pick a different name at
+install time, and the installer says it too. This VM predates that and shares
+its username with the machine it is administered from — the case worth not
+repeating, and worth fixing whenever it is next reinstalled.
 
 ## 2. Things that have never been tested
 
@@ -113,7 +115,7 @@ else.
 
 Two entries that used to live here are now fixed rather than tolerated:
 `restore` reads a bare word that is not a file as a username, so
-`manuserver restore mj` works; and `./manuserver.sh wordmark` re-derives the
+`manuserver restore admin` works; and `./manuserver.sh wordmark` re-derives the
 offline page's inlined logo from `files/promo/manuserver.svg` instead of
 leaving the two to drift. Both are in the checkout only until `install_command`
 is run — see §1.

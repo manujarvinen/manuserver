@@ -573,9 +573,9 @@ cmd_restore() {
   vm_running || die "not running — start it with: $SELF vm_start"
 
   # `backup` takes a username and `restore` takes a filename, so the obvious
-  # `restore mj` went looking for a file called `mj`. A single argument that is
-  # not a path and does not exist is a username — there is nothing else it
-  # could be, and guessing wrong only costs the confirmation prompt.
+  # `restore admin` went looking for a file called `admin`. A single argument
+  # that is not a path and does not exist is a username — there is nothing else
+  # it could be, and guessing wrong only costs the confirmation prompt.
   if [[ -n $file && -z ${2:-} && ! -e $file && $file != */* && $file != *.sql ]]; then
     user=$file
     file=

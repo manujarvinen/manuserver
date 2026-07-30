@@ -29,7 +29,7 @@ Then the VM is the server, and `manuserver` runs it from anywhere:
 ```sh
 manuserver              # start it (backgrounded, no window)
 manuserver vm_stop      # shut it down cleanly
-manuserver ssh mj       # shell on it, or http://localhost:8080
+manuserver ssh admin    # shell on it, or http://localhost:8080
 manuserver tunnel       # put it on the public internet
 manuserver backup       # database -> ~/Downloads
 manuserver site_dev     # run the website here instead, no VM involved
