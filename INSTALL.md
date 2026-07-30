@@ -113,17 +113,17 @@ That is all. There is no window and no login. The server starts on its own.
 | What you want | What to type |
 | --- | --- |
 | Start the server | `manuserver` |
-| Stop the server | `manuserver vm_stop` |
-| Check if it is running | `manuserver vm_status` |
+| Stop the server | `manuserver stop` |
+| Check if it is running | `manuserver status` |
 | Open a terminal on it | `manuserver ssh yourname` |
 | Put it on the internet | `manuserver tunnel` |
 | Save a copy of the database | `manuserver backup` |
 | Put a saved copy back | `manuserver restore` |
-| Watch it start up in a window | `manuserver vm_console` |
+| Watch it start up in a window | `manuserver console` |
 
 Replace `yourname` with the username you chose in step 3.
 
-Always use `vm_stop` to shut it down. It tells the server to close everything
+Always use `stop` to shut it down. It tells the server to close everything
 properly first.
 
 If you skipped the `manuserver` command, run these from inside the clone as
@@ -140,7 +140,7 @@ network open the site:
 MANUSERVER_HTTP_BIND=0.0.0.0 manuserver
 ```
 
-SSH stays on this computer either way. `manuserver vm_status` tells you which of
+SSH stays on this computer either way. `manuserver status` tells you which of
 the two you are running. For reaching it from outside the house, use the tunnel
 further down — it needs none of this.
 
@@ -447,7 +447,7 @@ It says so if the two already match, and rewrites the Worker if they do not.
    `tastehopping.com/*`. Add `www.tastehopping.com/*` as a second route if you
    published www as well.
 
-Test it by stopping the server — `manuserver vm_stop` — and loading the site.
+Test it by stopping the server — `manuserver stop` — and loading the site.
 
 **This is code in front of a working system**, there to handle the times it is
 not working. A mistake in the Worker takes the site down even while the server

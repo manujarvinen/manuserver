@@ -7,8 +7,8 @@ tested.
 
 ## 1. Nothing outstanding here
 
-Everything in this section is done. The next thing worth doing is §2 — build
-the ISO, then a clean-room install.
+Everything in this section is done, and so is the clean-room install in §2.
+What is left is bare metal and the offline Worker.
 
 ### Done, 2026-07-30
 
@@ -115,7 +115,7 @@ re-checks the rules if they change. It has never been deployed to Cloudflare
 and has never seen a real outage.
 
 Run `./manuserver.sh wordmark` first, then the deploy steps in INSTALL.md under
-*A page for when the server is off*. Test with `manuserver vm_stop`, then load
+*A page for when the server is off*. Test with `manuserver stop`, then load
 the site.
 
 Deploying it is the one item here that can break a working site: it is code in

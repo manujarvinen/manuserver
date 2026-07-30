@@ -4,10 +4,10 @@
 #
 #   ./manuserver.sh build_iso        build the installer ISO  (5-20 min, sudo)
 #   ./manuserver.sh vm_install       install that ISO into a VM  (erases it)
-#   ./manuserver.sh vm_start         start the server in the background
-#   ./manuserver.sh vm_stop          ask it to shut down cleanly
-#   ./manuserver.sh vm_status        is it up, and on which ports
-#   ./manuserver.sh vm_console       boot it in a window, to watch it boot
+#   ./manuserver.sh start            start the server in the background
+#   ./manuserver.sh stop             ask it to shut down cleanly
+#   ./manuserver.sh status           is it up, and on which ports
+#   ./manuserver.sh console          boot it in a window, to watch it boot
 #   ./manuserver.sh ssh [user]       open a shell on it
 #   ./manuserver.sh tunnel [on|off|status]   put the site on the internet
 #   ./manuserver.sh backup [user]    save the database to ~/Downloads
@@ -18,6 +18,11 @@
 #   ./manuserver.sh install_command  put `manuserver` on your PATH
 #
 # With no argument it starts the server, because that is the thing you do most.
+#
+# start, stop, status and console are also spelled vm_start, vm_stop, vm_status
+# and vm_console; both work. vm_install has no short form on purpose — it
+# erases the machine, and `install` sitting next to `install_command` is one
+# letter of inattention away from the wrong one.
 #
 # After install_command this is `manuserver`, and every line above works from
 # any directory. The VM lives in ~/.local/share/manuserver and backups go to
@@ -68,10 +73,14 @@ migrate_from_checkout
 case "${1:-vm_start}" in
   build_iso)        needs_checkout build_iso; shift; cmd_build_iso "$@" ;;
   vm_install)       shift; cmd_vm_install "$@" ;;
-  vm_start)         cmd_vm_start ;;
-  vm_stop)          cmd_vm_stop ;;
-  vm_status)        cmd_vm_status ;;
-  vm_console)       cmd_vm_console ;;
+  # The short spellings are what people reach for — `status` the way `git
+  # status` is. The vm_ forms stay because they are what INSTALL.md, the promo
+  # page and every existing habit already say, and there is no version of this
+  # worth breaking those over.
+  vm_start|start)     cmd_vm_start ;;
+  vm_stop|stop)       cmd_vm_stop ;;
+  vm_status|status)   cmd_vm_status ;;
+  vm_console|console) cmd_vm_console ;;
   ssh)              shift; cmd_ssh "$@" ;;
   tunnel)           shift; cmd_tunnel "$@" ;;
   backup)           shift; cmd_backup "$@" ;;
