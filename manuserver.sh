@@ -2,7 +2,7 @@
 #
 # manuserver — build it, install it, run it. One script, one directory.
 #
-#   ./manuserver.sh build_iso        build the installer ISO   (~20 min, sudo)
+#   ./manuserver.sh build_iso        build the installer ISO  (5-20 min, sudo)
 #   ./manuserver.sh vm_install       install that ISO into a VM  (erases it)
 #   ./manuserver.sh vm_start         start the server in the background
 #   ./manuserver.sh vm_stop          ask it to shut down cleanly

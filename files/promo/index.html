@@ -118,7 +118,7 @@
   </p>
 <pre>git clone https://github.com/manujarvinen/manuserver.git
 cd manuserver
-./manuserver.sh build_iso     # ~20 min
+./manuserver.sh build_iso     # 5-20 min
 ./manuserver.sh vm_install</pre>
   <p class="note">
     Four questions — network, username, password, which disk — then it sets up
@@ -154,16 +154,16 @@ caligula burn -z none manuserver-*.iso</pre>
 <pre>manuserver               start it
 manuserver vm_stop       shut it down
 manuserver vm_status     is it running?
-manuserver ssh mj        open a terminal on it
+manuserver ssh admin     open a terminal on it
 manuserver tunnel        put it on the public internet
-manuserver backup mj     save the database to a file
+manuserver backup admin  save the database to a file
 manuserver restore       put the newest saved one back</pre>
   <p class="note">
     No window opens; it runs in the background, the way a server does. The site
     is at <a href="http://localhost:8080">localhost:8080</a>.
   </p>
   <p class="note">
-    The <code>mj</code> in those lines is the username on <em>the server</em>,
+    The <code>admin</code> in those lines is the username on <em>the server</em>,
     and so is every password they ask for — you are at your own computer, but
     nothing here is asking about it. This reads much more clearly when the two
     machines are not both called the same thing.
@@ -178,7 +178,7 @@ manuserver restore       put the newest saved one back</pre>
     Its own screen shows the address it has on your network — that is where the
     site is, and where to <code>ssh</code>.
   </p>
-<pre>ssh mj@192.168.1.50            open a terminal on it
+<pre>ssh admin@192.168.1.50         open a terminal on it
 sudo manuserver-tunnel         put it on the public internet
 sudo manuserver-tunnel status  is the tunnel up?
 sudo manuserver-tunnel off     take it back off
@@ -186,7 +186,7 @@ sudo manuserver-tunnel off     take it back off
 sudo -u postgres pg_dumpall --clean &gt; backup.sql   save the database
 sudo -u postgres psql -f backup.sql                 put it back</pre>
   <p class="note">
-    <code>mj</code> and the password are the ones you gave the installer, not
+    <code>admin</code> and the password are the ones you gave the installer, not
     your own computer's — which is far easier to keep straight if you did not
     give the two machines the same username. Copy that backup file off the
     machine and you cannot lose the database. Putting one back replaces

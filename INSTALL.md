@@ -31,8 +31,9 @@ cd manuserver
 ./manuserver.sh build_iso
 ```
 
-This takes about 20 minutes. It will ask for your password, because it needs
-administrator rights.
+This takes 5 to 20 minutes, depending on your machine and how fast its package
+mirror is. It will ask for your password, because it needs administrator
+rights.
 
 The finished `.iso` appears right next to `manuserver.sh`, in the folder you cloned.
 

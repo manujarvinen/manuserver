@@ -15,7 +15,7 @@ that *is* the account.
 git clone https://github.com/manujarvinen/manuserver.git
 cd manuserver
 
-./manuserver.sh build_iso     # -> ./manuserver-*.iso   (~20 min, sudo)
+./manuserver.sh build_iso     # -> ./manuserver-*.iso  (5-20 min, sudo)
 ./manuserver.sh vm_install    # install that ISO into a VM
 ```
 

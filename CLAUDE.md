@@ -16,9 +16,12 @@ thing:
 That script installs nginx, PHP, Postgres and cloudflared and points them at the
 clone. So the ISO knows nothing about what the server becomes, which is the
 whole design: **change the server and the same ISO, unrebuilt, installs the new
-one.** Building an ISO takes twenty minutes and testing one takes a reinstall,
-so the ISO is meant to stop changing. Everything downstream of the clone
-iterates with a push and a reinstall — or on a running machine, with a pull:
+one.** A rebuild is 5–20 minutes depending on the machine and how fast its
+pacman mirror is — most of it is pacstrap — so the cost of touching the ISO is
+not the build. It is that the only way to test one is a full reinstall, which
+means changes under `files/iso/` are the slowest thing in this repo to verify.
+Everything downstream of the clone iterates with a push and a reinstall — or on
+a running machine, with a pull:
 
 ```sh
 cd /srv/manuserver && sudo git pull

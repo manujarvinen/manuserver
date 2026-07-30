@@ -52,7 +52,7 @@ cmd_build_iso() {
   [[ -r $logo ]] || die "logo not found at $logo — is the checkout complete?"
 
   # mkarchiso needs room for the work tree plus the ISO. Running out halfway
-  # through wastes twenty minutes and leaves a confusing pacstrap error.
+  # through wastes the whole build and leaves a confusing pacstrap error.
   avail=$(df -BG --output=avail "$ISO_DIR" | tail -n1 | tr -dc '0-9')
   if [[ -n $avail ]] && ((avail < 12)); then
     die "only ${avail}G free on $ISO_DIR — the build needs about 12G"

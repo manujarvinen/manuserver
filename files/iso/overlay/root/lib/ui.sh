@@ -352,8 +352,15 @@ ui_key() {
 
 # --- widgets ---------------------------------------------------------------
 
-# ui_input <label> <mask:0|1> — prompt on one line, hint below, block cursor
-# drawn by hand. The answer lands in UI_RESULT.
+# ui_input <label> <mask:0|1> [placeholder] — prompt on one line, hint below,
+# block cursor drawn by hand. The answer lands in UI_RESULT.
+#
+# The placeholder is drawn, never stored. Enter on an untouched field submits
+# an empty string exactly as it did before, and the caller's validation rejects
+# it. That distinction is the whole point: a *default* username would put the
+# same account name on every machine installed from this ISO, and sshd here
+# accepts passwords, so a guessable name gives an attacker half the credential.
+# An example that has to be typed costs nothing and gives away nothing.
 #
 # Widgets never return values on stdout, because stdout is the screen: a
 # `x=$(ui_input ...)` would capture every escape sequence the widget draws
@@ -365,7 +372,7 @@ ui_key() {
 # then owns a machine with a password they cannot type. Showing the text is
 # the only way that becomes visible.
 ui_input() {
-  local label=$1 mask=${2:-0}
+  local label=$1 mask=${2:-0} placeholder=${3:-}
   local value='' reveal=0 key
   local row=$UI_ROW
   local hint
@@ -387,9 +394,19 @@ ui_input() {
 
     ui_at "$row" "$UI_PAD"
     ui_clear_line
-    printf '%s%s>%s %s%s%s %s' \
-      "$S_ACCENT" "$label" "$S_RESET" \
-      "$S_INPUT" "$shown" "$S_CURSOR" "$S_RESET"
+    if [[ -z $value && -n $placeholder ]]; then
+      # The cursor sits *on* the first character rather than before the text,
+      # so the line reads as one field waiting for input instead of a block
+      # followed by a stray grey sentence.
+      printf '%s%s>%s %s%s%s%s%s%s' \
+        "$S_ACCENT" "$label" "$S_RESET" \
+        "$S_CURSOR" "${placeholder:0:1}" "$S_RESET" \
+        "$S_HINT" "${placeholder:1}" "$S_RESET"
+    else
+      printf '%s%s>%s %s%s%s %s' \
+        "$S_ACCENT" "$label" "$S_RESET" \
+        "$S_INPUT" "$shown" "$S_CURSOR" "$S_RESET"
+    fi
 
     key=$(ui_key)
     case $key in

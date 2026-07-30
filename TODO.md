@@ -57,10 +57,19 @@ VM is `mj` on both, which is the case worth not repeating.
 
 ## 2. Things that have never been tested
 
-**The ISO.** `files/iso/overlay/root/installer.sh` gained an 8-character
-minimum password that has never been built into an ISO or run — the installed
-VM predates it. `./manuserver.sh build_iso` (~20 min). Nothing else in the
-installer changed, so this is the only untested part of it.
+**The ISO.** Two things in `files/iso/overlay/root/` have never been built into
+an ISO or run: the 8-character minimum password, and the username screen — a
+placeholder in the input field and two lines saying to pick a name you do not
+use on your own computer.
+
+**The ISO built on 2026-07-30 at 20:07 predates the username change**, so it
+needs building again before it is worth installing: `./manuserver.sh build_iso`
+(5-20 min).
+
+Worth watching for on the username screen, since it is drawn by hand: the
+placeholder must vanish on the first keystroke, pressing enter on an untouched
+field must be refused rather than accepted as a name, and backspacing back to
+empty should bring the placeholder back.
 
 **A clean-room install.** The original plan — clone fresh into another
 directory, build, install — was never carried out. It is the only thing that

@@ -53,7 +53,15 @@ ask_username() {
     ui_screen
     ui_body "Let's setup your user account..."
     ui_blank
-    ui_input "Username" 0
+    # Said here because here is where it is decided, and it cannot be changed
+    # afterwards without reinstalling. Commands like `manuserver backup` run on
+    # your own computer, reach across to this machine and ask for a password
+    # partway through — this machine's. With the same name on both there is
+    # nothing in that prompt to say which one is asking.
+    ui_body "Use a different name from the one on your own computer,"
+    ui_body "so you can always tell the two machines apart."
+    ui_blank
+    ui_input "Username" 0 'lowercase, no spaces (like admin)'
 
     # Same rule useradd enforces, checked here so the failure is a sentence
     # instead of a chroot error at the very end of the install.
