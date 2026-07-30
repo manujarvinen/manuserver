@@ -252,6 +252,17 @@ a:hover { color: var(--link-hover) }
 
 .inline { display: inline }
 
+/*
+ * `hidden` has to outrank the display rules below it.
+ *
+ * The browser's own [hidden] { display: none } is a user-agent rule, so any
+ * author rule that sets display beats it. .framed-action sets inline-flex, so
+ * app.js hiding the slider's "apply" button set the attribute and nothing
+ * happened — the button stayed on screen for everyone with JavaScript, which
+ * is the one group it is not for.
+ */
+[hidden] { display: none !important }
+
 .like-box,
 .framed-action {
   display: inline-flex;
