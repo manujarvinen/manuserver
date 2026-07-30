@@ -108,6 +108,13 @@
   </p>
 
   <h2>How to use in Virtual Machine</h2>
+  <p class="note">
+    <strong>Give the server a different username from the one on your own
+    computer.</strong> These commands run on your machine but reach across to
+    the server, and the password they ask for partway through is the server's.
+    With the same name on both, the prompt looks identical whichever one is
+    asking, and the obvious guess is the wrong one.
+  </p>
 <pre>git clone https://github.com/manujarvinen/manuserver.git
 cd manuserver
 ./manuserver.sh build_iso     # ~20 min
@@ -118,15 +125,16 @@ cd manuserver
     <code>manuserver</code> command, and to delete the <code>.iso</code> and the
     clone. Neither is needed to run the server.
   </p>
-  <p class="note">
-    <strong>Give the server a different username from the one on your own
-    computer.</strong> These commands run on your machine but reach across to
-    the server, and the password they ask for partway through is the server's.
-    With the same name on both, the prompt looks identical whichever one is
-    asking, and the obvious guess is the wrong one.
-  </p>
 
   <h2>How to use in 64-bit PC</h2>
+  <p class="note">
+    <strong>Give the server a different username from the one on your own
+    computer.</strong> You will nearly always be reaching this machine over
+    <code>ssh</code> from another one, and once you are in, every prompt —
+    <code>sudo</code>, a database dump, a restore — belongs to the server. With
+    the same name on both, nothing on screen tells you which machine you are
+    typing at. Different names and the shell prompt itself answers it.
+  </p>
   <p class="note">
     Build the <code>.iso</code> as above, then write it to a whole USB disk —
     that disk is completely overwritten. Caligula lists the disks and you pick
