@@ -2,37 +2,46 @@
 
 ## 0. Where this stands, 2026-07-31
 
-**The development machine was wiped, and there is no server any more.** This
-is the wipe §2 planned for, and it did not go the way the plan describes. The
-bare-metal install of *this* repo failed on the disk (see *Bare metal*, §2),
-and rather than stay down, the machine was reinstalled with something else —
-`github.com/gearnoodle/archlab` — at 03:01. So the target hardware is now in
-use by another system, and the bare-metal test is blocked on freeing it again
-or finding a second machine.
+**The development machine was wiped and rebuilt from scratch, and everything
+survived that a fresh clone is supposed to survive.** This is the wipe §2
+planned for, and it did not go the way the plan describes: the bare-metal
+install of *this* repo failed on the disk (see *Bare metal*, §2), and rather
+than stay down, the machine was reinstalled with something else —
+`github.com/gearnoodle/archlab` — at 03:01. **So the target hardware is now in
+use by another system, and the bare-metal test is blocked** on freeing it
+again or finding a second machine.
 
-What that wipe took with it, all of it expected and none of it recoverable
-from this checkout:
+The wipe took the VM and the live server on it, the `manuserver` command, the
+Cloudflare tunnel token and anything in `~/Downloads`. All expected, and the
+whole point of §2's list. **The route back was exactly the documented one**,
+run the same morning from a fresh clone:
 
-- **The VM, and the live server on it.** `~/.local/share/manuserver` is gone.
-  tastehopping.com has no origin.
-- **The `manuserver` command.** No `~/.local/bin/manuserver`; this is a fresh
-  clone, so there is nothing on PATH until `install_command` runs.
-- **The Cloudflare tunnel token**, exactly as §2 said it would: it only ever
-  lived on the server. Take a new one from the dashboard.
-- **Any backup that was on this disk.** `~/Downloads` is empty. Whether a
-  database copy left the machine first is the one open question here, and the
-  answer is not in the repo.
+    ./manuserver.sh build_iso     # 1.5G ISO, with the disk fix baked in
+    ./manuserver.sh vm_install
+    ./manuserver.sh install_command
 
-**The offline Worker covered it, unprompted.** tastehopping.com currently
-answers with `<title>tastehopping — back shortly</title>` rather than a
-Cloudflare 1033. That is the first *real* outage it has taken — not a planned
-maintenance window, and not one anybody set up to watch it — which was one of
-the two things §2 listed as still unseen. It works.
+**Verified on that VM's first boot, with nothing done by hand:** the front
+page returns 200 with a session cookie; `/new` returns 200, which is the one
+that matters, since rendering a feed reads `user_reputation` and so proves
+`db-setup.sh` built the role, the database and the schema at boot;
+`/fonts/*.woff2` comes back with `max-age=31536000`; `/index.php` and a
+made-up path both 404, so only the router executes.
 
-Getting back to a running server, from this clone, is the sequence in
-[INSTALL.md](INSTALL.md): `build_iso`, `vm_install`, then a fresh tunnel
-token. Rebuilding the ISO is not optional this time — the disk fix in §2 is
-baked into the medium.
+**What is still missing is the tunnel.** The token only ever lived on the old
+server, so the site has no origin until a new one is taken from the Cloudflare
+dashboard and given to `manuserver tunnel`.
+
+**Whether any database backup left the machine before the wipe is unknown.**
+`~/Downloads` was empty afterwards. If none did, the posts that were on the
+old server are gone, and the rebuilt one starts empty — which is survivable
+and worth knowing rather than discovering later.
+
+**The offline Worker covered the whole outage, unprompted.** Through the wipe
+and the rebuild, tastehopping.com answered with `<title>tastehopping — back
+shortly</title>` rather than a Cloudflare 1033. That is the first *real*
+outage it has taken — not a planned maintenance window, and not one anybody
+set up to watch it — which was one of the two things §2 listed as still
+unseen. It works.
 
 ## 1. Nothing outstanding here
 
@@ -163,7 +172,11 @@ reported it. The disk lost its contents and gained no install. That order is
 now reversed: `wipefs` is the first thing that touches the disk, so a disk
 this installer cannot have is a disk it has not modified.
 
-**Fixed but not yet proven.** `disk_release` in
+**Fixed, and still not proven where it counts.** The rebuilt ISO installs
+cleanly into a VM, so the change does not break the ordinary path — but a
+fresh qcow2 has no btrfs signature to register, so `disk_release` finds
+nothing and returns immediately. Only a disk somebody has used before
+exercises it. `disk_release` in
 `files/iso/overlay/root/lib/disk.sh` now unmounts and `swapoff`s everything on
 the target, deactivates volume groups with `vgchange`, stops leftover md
 arrays and dm mappings, and hands every btrfs member back with `btrfs device
