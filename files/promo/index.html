@@ -205,6 +205,68 @@ sudo -u postgres psql -f backup.sql                 put it back</pre>
     so it is not on this machine. Everything here you do over <code>ssh</code>.
   </p>
 
+  <h2>Saving the database, and putting it back</h2>
+  <p>
+    <strong>The database is the only thing on the machine that cannot be
+    rebuilt.</strong> Everything else — the system, the site, the tunnel — comes
+    back from a reinstall. The saved videos and the accounts do not.
+  </p>
+  <p class="note">
+    With the server in a virtual machine, both directions are one command, run
+    on your own computer:
+  </p>
+<pre>manuserver backup admin    save it to ~/Downloads
+manuserver restore admin   put the newest saved one back</pre>
+  <p class="note">
+    The file lands in your <strong>Downloads</strong> folder named by date, like
+    <code>manuserver-2026-07-28-2101.sql</code>, and it is the whole database as
+    plain text. <code>restore</code> takes the newest
+    <code>manuserver-*.sql</code> there and ignores any other <code>.sql</code>
+    you happen to have; to choose a different one, name it:
+    <code>manuserver restore ~/Downloads/manuserver-2026-07-28-2101.sql</code>.
+    One word that is not a file it can find is read as a username instead, so
+    <code>restore admin</code> does what it looks like.
+  </p>
+  <p class="note">
+    Both need the server running, and both ask for the server's password twice —
+    once for <code>ssh</code>, once for <code>sudo</code> at the far end.
+    Restoring replaces what is on the server, so it asks you to confirm first.
+  </p>
+  <p class="note">
+    On a real computer there is no <code>manuserver</code> command to do it for
+    you, so it is Postgres directly, in an <code>ssh</code> session on the
+    machine:
+  </p>
+<pre>sudo -u postgres pg_dumpall --clean &gt; backup.sql   save the database
+sudo -u postgres psql -f backup.sql                 put it back</pre>
+  <p class="note">
+    Nothing asks you to confirm that one, and it replaces everything currently
+    in the database. Copy the file off the machine afterwards — a backup sitting
+    on the disk it is a backup of is not one. A USB stick, at the machine's own
+    keyboard:
+  </p>
+<pre>lsblk -f                            find the stick
+sudo mount /dev/sdb1 /mnt
+cp backup.sql /mnt/
+sudo umount /mnt                    before pulling it out</pre>
+  <p class="note">
+    <code>lsblk -f</code> lists the disks; the stick is the one that appeared
+    when you plugged it in, and <code>/dev/sdb1</code> is a guess at its name
+    rather than a fact. Unmount before unplugging or the copy may still be in
+    memory and not on the stick. From another computer it is
+    <code>scp admin@the-server:backup.sql .</code> instead, and on a desktop
+    with the stick already mounted for you, dragging the file across and
+    pressing eject is the same thing.
+  </p>
+  <p class="note">
+    A backup is readable text and holds every saved video and every account
+    name, so treat it as private. It does <em>not</em> let anyone log in as
+    those accounts: only the SHA-256 of each key is stored, never the key. Nor
+    does it carry the tunnel token, which lives in <code>/etc/manuserver/</code>
+    and not in the database. Take one before <code>vm_install</code>, which
+    wipes the virtual machine and the database with it.
+  </p>
+
   <h2>On the internet</h2>
   <p>
     A Cloudflare tunnel publishes it without opening anything on your router.
@@ -260,6 +322,26 @@ sudo -u postgres psql -f backup.sql                 put it back</pre>
     at the server's own keyboard, or in an <code>ssh</code> session on it,
     <code>sudo manuserver-tunnel</code>. Nothing appears as you paste, which is
     deliberate.
+  </p>
+  <p class="note">
+    At a real server's own keyboard there is nothing to paste <em>from</em> — no
+    browser, no clipboard, and the token is far too long to type off a phone
+    screen. Bring it on a USB stick instead;
+    <code>manuserver-tunnel</code> reads it from standard input, so a file works
+    with no change to anything:
+  </p>
+<pre>lsblk -f                            find the stick
+sudo mount /dev/sdb1 /mnt
+sudo manuserver-tunnel &lt; /mnt/token.txt
+sudo umount /mnt</pre>
+  <p class="note">
+    Whole install command or just the token, wrapped across lines or not — the
+    spaces and newlines are collapsed and the token taken out of it, the same as
+    at the prompt. Then delete the file and take the stick away: this is the one
+    secret on the machine, and a copy of it in a drawer is a copy of it. It is
+    also the one thing you can always throw away and replace —
+    <code>sudo manuserver-tunnel off</code> forgets it and Cloudflare will issue
+    another.
   </p>
   <p class="note">
     <strong>Healthy is not the same as reachable.</strong> It only means the

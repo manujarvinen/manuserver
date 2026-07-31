@@ -33,8 +33,18 @@ manuserver status       # is it up, and on which ports
 manuserver ssh admin    # shell on it, or http://localhost:8080
 manuserver tunnel admin # put it on the public internet
 manuserver backup admin # database -> ~/Downloads
+manuserver restore      # put the newest one in ~/Downloads back
 manuserver site_dev     # run the website here instead, no VM involved
 ```
+
+The database is the only thing here that a reinstall cannot rebuild, so
+`backup` is the one to get into the habit of. It writes
+`~/Downloads/manuserver-<date>.sql`, plain text, the whole thing; copy it
+somewhere else and you cannot lose it. `restore` takes the newest such file, or
+a path if you name one, and asks before replacing what is on the server. On
+bare metal, where there is no `manuserver` command, it is `pg_dumpall` and
+`psql` over `ssh` — [INSTALL.md](INSTALL.md#saving-a-copy-of-the-database) has
+both.
 
 `admin` there is the name you gave the *server*. Leave it out and these use
 your name on this computer, which is a different account and has no password

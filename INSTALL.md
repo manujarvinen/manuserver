@@ -166,7 +166,19 @@ manuserver backup
 
 A file appears in your **Downloads** folder, named by date, like
 `manuserver-2026-07-28-2101.sql`. That file is the whole database as plain
-text. Copy it to a USB stick now and then and you cannot lose your work.
+text. Copy it to a USB stick now and then and you cannot lose your work:
+
+```sh
+lsblk -f                                          # find the stick
+sudo mount /dev/sdb1 /mnt
+cp ~/Downloads/manuserver-*.sql /mnt/
+sudo umount /mnt                                  # before pulling it out
+```
+
+`umount` before unplugging, or the copy may still be in memory and not on the
+stick. Most desktops will mount a stick for you when you plug it in and show it
+in the file manager, in which case drag the file across and use the eject
+button — the same thing with fewer words.
 
 To put a saved copy back:
 
@@ -230,8 +242,10 @@ sudo -u postgres psql -f backup.sql                # put it back
 ```
 
 Copy that file off the machine afterwards — a backup sitting on the disk it is
-a backup of is not one. Restoring replaces everything currently in the
-database, and nothing asks you to confirm.
+a backup of is not one. Either `scp yourname@the-server:backup.sql .` from
+another computer, or a stick at the server's own keyboard, mounted the same way
+as above. Restoring replaces everything currently in the database, and nothing
+asks you to confirm.
 
 A backup is readable text and holds every saved video and every account name,
 so treat it as private. It does **not** let anyone log in as those accounts:
@@ -357,6 +371,32 @@ real server, its address is on its own screen, next to **on this network**.
 
 Afterwards, `manuserver tunnel status yourname` and
 `manuserver tunnel off yourname` — the username goes last, after the word.
+
+#### Bringing the token on a USB stick
+
+At a real server's own keyboard there is nothing to paste from — no browser, no
+clipboard, and a tunnel token is far too long to read off a phone and type. Put
+it in a file on a stick instead. `manuserver-tunnel` reads the token from
+standard input, so a file works with no change to anything:
+
+```sh
+lsblk -f                              # find the stick
+sudo mount /dev/sdb1 /mnt
+sudo manuserver-tunnel < /mnt/token.txt
+sudo umount /mnt
+```
+
+`lsblk -f` lists the disks with their sizes and labels; the stick is the one
+that appeared when you plugged it in, and `/dev/sdb1` above is a guess at its
+name, not a fact. Whole file or just the token, wrapped across lines or not —
+the spaces and newlines are collapsed, and an install command pasted in whole
+has the token taken out of it, exactly as at the prompt.
+
+Then **delete the file and take the stick away.** The token is the one secret
+on the server; a copy of it on a stick left in a drawer is a copy of it, and
+anyone holding it can publish their own machine at your domain until you make a
+new tunnel. It is also the one thing here you can always throw away and replace:
+`sudo manuserver-tunnel off` forgets it, and Cloudflare will issue another.
 
 #### If it asks for a password and refuses every one you try
 
