@@ -172,11 +172,35 @@ reported it. The disk lost its contents and gained no install. That order is
 now reversed: `wipefs` is the first thing that touches the disk, so a disk
 this installer cannot have is a disk it has not modified.
 
-**Fixed, and still not proven where it counts.** The rebuilt ISO installs
-cleanly into a VM, so the change does not break the ordinary path — but a
-fresh qcow2 has no btrfs signature to register, so `disk_release` finds
-nothing and returns immediately. Only a disk somebody has used before
-exercises it. `disk_release` in
+**Fixed, and reproduced and proven, 2026-07-31.** A plain VM install proves
+nothing here — a fresh qcow2 has no btrfs signature to register, so
+`disk_release` finds nothing and returns. So the condition was rebuilt
+deliberately: `mkfs.btrfs` needs no root to format a *plain file*, so a disk
+image shaped like the machine that failed — GPT, a 1G ESP, the rest btrfs,
+label `archlab` — costs nothing to make and boots as an ordinary virtio disk.
+The live medium then registers it at boot exactly as it did on the NVMe.
+
+The ISO installed onto it, start to finish. Measured from the host, on the
+image itself:
+
+| | before | after |
+|---|---|---|
+| image size | 1.8 MB | 2.6 GB |
+| partition 2 type | `Linux filesystem` | `Linux root (x86-64)` |
+| filesystem | btrfs `archlab` | ext4 `manuserver` |
+
+And it boots: brought up headless on port 8081, the installed system serves
+the front page, `/new` returns 200, `/fonts/` carries `max-age=31536000` and
+`/index.php` 404s. So a disk with a previous filesystem on it is now
+installable, which is the single thing that stopped the bare-metal attempt.
+
+`files/dev/dirty-disk-test.sh` rebuilds that disk and boots the ISO against
+it. It is worth running after any change to `disk.sh`, because nothing else in
+the repo can fail the way real hardware does.
+
+What this still does not cover is the rest of what bare metal adds: real
+firmware, a real NVMe controller, the two-disk menu with a USB stick in it,
+and wifi. `disk_release` in
 `files/iso/overlay/root/lib/disk.sh` now unmounts and `swapoff`s everything on
 the target, deactivates volume groups with `vgchange`, stops leftover md
 arrays and dm mappings, and hands every btrfs member back with `btrfs device

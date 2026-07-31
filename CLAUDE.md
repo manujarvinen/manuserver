@@ -20,6 +20,12 @@ one.** A rebuild is 5–20 minutes depending on the machine and how fast its
 pacman mirror is — most of it is pacstrap — so the cost of touching the ISO is
 not the build. It is that the only way to test one is a full reinstall, which
 means changes under `files/iso/` are the slowest thing in this repo to verify.
+
+The disk half of that has a shortcut. `files/dev/dirty-disk-test.sh` builds a
+disk image that is *not* blank — GPT, an ESP and a btrfs root, which is what
+real hardware looks like and what a fresh qcow2 never does — and boots the ISO
+against it. Run it after any change to `disk.sh`. The first bare-metal attempt
+failed on exactly that difference, and no other test in this repo can.
 Everything downstream of the clone iterates with a push and a reinstall — or on
 a running machine, with a pull:
 
@@ -221,6 +227,7 @@ What has to be installed, and nothing does until you need it:
 | `build_iso` | Arch, and about 15 GB free. It installs archiso and qemu itself. |
 | `site_dev`, `site_seed` | `postgresql` and `php-pgsql` |
 | `files/dev/offline-worker-test.mjs` | node 22 or newer |
+| `files/dev/dirty-disk-test.sh` | qemu, `btrfs-progs`, `dosfstools`, and an ISO in the repo root |
 
 **One thing a clone will not tell you.** This repo's own remote was
 `git@github-manujarvinen:manujarvinen/manuserver.git` — an alias defined in one

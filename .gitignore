@@ -7,3 +7,7 @@ files/iso/build/
 
 # The throwaway Postgres cluster `manuserver.sh site_dev` builds for itself.
 files/dev/.cluster/
+
+# The disk `files/dev/dirty-disk-test.sh` builds to install onto. Several GB
+# once something has been installed on it, and rebuilt from nothing each run.
+files/dev/.dirty/
