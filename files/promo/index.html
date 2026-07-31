@@ -191,8 +191,9 @@ sudo manuserver-tunnel         put it on the public internet
 sudo manuserver-tunnel status  is the tunnel up?
 sudo manuserver-tunnel off     take it back off
 
+cd ~
 sudo -u postgres pg_dumpall --clean &gt; backup.sql   save the database
-sudo -u postgres psql -f backup.sql                 put it back</pre>
+sudo -u postgres psql &lt; backup.sql                  put it back</pre>
   <p class="note">
     <code>admin</code> and the password are the ones you gave the installer, not
     your own computer's — which is far easier to keep straight if you did not
@@ -237,8 +238,20 @@ manuserver restore admin   put the newest saved one back</pre>
     you, so it is Postgres directly, in an <code>ssh</code> session on the
     machine:
   </p>
-<pre>sudo -u postgres pg_dumpall --clean &gt; backup.sql   save the database
-sudo -u postgres psql -f backup.sql                 put it back</pre>
+<pre>cd ~
+sudo -u postgres pg_dumpall --clean &gt; backup.sql   save the database
+sudo -u postgres psql &lt; backup.sql                  put it back</pre>
+  <p class="note">
+    Your home folder is the right place for it, and both lines are written so it
+    works from there. <strong><code>&lt; backup.sql</code>, not
+    <code>-f backup.sql</code></strong> — the <code>&lt;</code> is your shell
+    opening the file as <em>you</em> and handing it over already open, where
+    <code>-f</code> makes psql open it itself, as <code>postgres</code>, which
+    cannot see inside your home folder. That one says
+    <em>Permission denied</em> about a file you are looking straight at, and
+    reads like a broken backup rather than a folder it was never allowed to
+    enter.
+  </p>
   <p class="note">
     Nothing asks you to confirm that one, and it replaces everything currently
     in the database. Copy the file off the machine afterwards — a backup sitting

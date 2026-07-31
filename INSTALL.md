@@ -237,9 +237,18 @@ terminal unlocked from reading the database out of the machine.
 it is Postgres directly, over `ssh`:
 
 ```sh
+cd ~
 sudo -u postgres pg_dumpall --clean > backup.sql   # save it
-sudo -u postgres psql -f backup.sql                # put it back
+sudo -u postgres psql < backup.sql                 # put it back
 ```
+
+Your home folder is the right place for it, and both of those lines are written
+so it works from there. **`< backup.sql`, not `-f backup.sql`** — the `<` is
+your shell opening the file as *you* and handing it over already open, while
+`-f` makes psql open it itself, as `postgres`, which cannot see inside your home
+folder: it is `drwx------`, and `postgres` is neither you nor root. That failure
+says `Permission denied` about a file you are looking straight at, and reads
+like a broken backup rather than a folder it was never allowed to enter.
 
 Copy that file off the machine afterwards — a backup sitting on the disk it is
 a backup of is not one. Either `scp yourname@the-server:backup.sql .` from

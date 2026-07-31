@@ -224,7 +224,9 @@ A fresh clone is enough. Nothing else survives a wipe and nothing else needs to:
 - **Backups do not come with you either** — `~/Downloads`, outside the repo, on
   purpose. Restoring one onto a freshly installed server is
   `manuserver restore <file>`, or on bare metal
-  `sudo -u postgres psql -f backup.sql`.
+  `sudo -u postgres psql < backup.sql` — redirect, not `-f`, because `-f` is
+  opened by psql as `postgres` and home directories are `0700`, so a backup in
+  the user's own home is unreadable to it.
 - **The Cloudflare tunnel and the offline Worker live at Cloudflare**, not
   here. The Worker survives any number of wipes. The tunnel token does not —
   it is only ever on the server, and `manuserver-tunnel off` deletes it. Take a
