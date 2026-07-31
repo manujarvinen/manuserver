@@ -92,6 +92,16 @@ asked from your terminal, and with matching usernames there is nothing in it to
 say so. Anything added here that prompts across the connection inherits the same
 problem.
 
+Taking that advice makes the *default* wrong, which is the trade. `$USER` is
+then an account the server does not have, sshd asks for a password anyway, and
+no answer can be right — the correct local password included. `cmd_tunnel`
+therefore does two things worth copying into anything else that logs in:
+`announce_remote_login` names the account and whose passwords are coming
+*before* the first prompt, and it does not `exec ssh`, so exit 255 can be
+turned into "there is probably no such account, pass the name" instead of
+`Permission denied (publickey,password)`, which reads as a key problem and is
+not one.
+
 `ssh_opts` pins `SSH_KEY` (`~/.ssh/id_ed25519_manuserver`, or
 `MANUSERVER_SSH_KEY`) with `IdentitiesOnly`. Left to itself ssh walks its
 default names and offers whatever it finds, which on a machine keeping several

@@ -88,6 +88,14 @@ work. On a server installed under a different name they do not, and the failure
 reads as `Permission denied (publickey,password)` — which looks like a key
 problem and is not. Pass the name: `manuserver backup johnson`.
 
+**`tunnel` now says so itself.** It names the account and warns that every
+password from there on is the server's before the first prompt appears, and it
+turns ssh's exit 255 into the actual reason with the command to fix it. Tested
+against the running VM with a username that does not exist. `ssh`, `backup` and
+`restore` still fail the old way — worth the same treatment, and the reason
+`announce_remote_login` in `files/lib/vm.sh` is a function rather than four
+lines inside `cmd_tunnel`.
+
 **Matching them is the worse trade, though.** Every password these commands ask
 for is the server's, asked from your own terminal. When both machines call you
 the same thing the prompt is identical either way and there is nothing to tell

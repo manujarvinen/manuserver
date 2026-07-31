@@ -155,7 +155,7 @@ caligula burn -z none manuserver-*.iso</pre>
 manuserver stop          shut it down
 manuserver status        is it running?
 manuserver ssh admin     open a terminal on it
-manuserver tunnel        put it on the public internet
+manuserver tunnel admin  put it on the public internet
 manuserver backup admin  save the database to a file
 manuserver restore       put the newest saved one back</pre>
   <p class="note">
@@ -167,6 +167,14 @@ manuserver restore       put the newest saved one back</pre>
     and so is every password they ask for — you are at your own computer, but
     nothing here is asking about it. This reads much more clearly when the two
     machines are not both called the same thing.
+  </p>
+  <p class="note">
+    Leave the name out and it uses yours, from this computer — which, if you
+    took the advice above, is an account the server does not have. Then it asks
+    for a password no answer can satisfy, the right one included. <em>Any</em>
+    password these commands ask for belongs to the server: first its
+    <code>ssh</code> login, then <code>sudo</code> once you are in, both typed
+    into your own terminal and neither of them labelled.
   </p>
 
   <h2>Running it in 64-bit PC</h2>
@@ -225,8 +233,8 @@ sudo -u postgres psql -f backup.sql                 put it back</pre>
       need. Treat it like a password.
     </li>
     <li>
-      Give the token to <code>manuserver tunnel</code> first, so the tunnel is
-      connected. Then <strong>Networks → Tunnels &amp; Mesh</strong>, click your
+      Give the token to <code>manuserver tunnel admin</code> first, so the
+      tunnel is connected. Then <strong>Networks → Tunnels &amp; Mesh</strong>, click your
       tunnel, and open <strong>Published application routes</strong>. Leave
       Subdomain and Path empty, pick your domain, and set the service to type
       <code>HTTP</code>, URL <code>localhost:80</code> — port 80, not the 8080
@@ -246,8 +254,12 @@ sudo -u postgres psql -f backup.sql                 put it back</pre>
     again.
   </p>
   <p class="note">
-    Then <code>manuserver tunnel</code> — or <code>sudo manuserver-tunnel</code>
-    on a PC — asks for the token.
+    One command asks for the token, and it runs <em>on the server</em>. Which
+    one you type depends only on where you are sitting: at your own computer
+    with the server in a virtual machine, <code>manuserver tunnel admin</code>;
+    at the server's own keyboard, or in an <code>ssh</code> session on it,
+    <code>sudo manuserver-tunnel</code>. Nothing appears as you paste, which is
+    deliberate.
   </p>
   <p class="note">
     <strong>Healthy is not the same as reachable.</strong> It only means the

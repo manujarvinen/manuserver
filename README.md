@@ -31,10 +31,15 @@ manuserver              # start it (backgrounded, no window)
 manuserver stop         # shut it down cleanly
 manuserver status       # is it up, and on which ports
 manuserver ssh admin    # shell on it, or http://localhost:8080
-manuserver tunnel       # put it on the public internet
-manuserver backup       # database -> ~/Downloads
+manuserver tunnel admin # put it on the public internet
+manuserver backup admin # database -> ~/Downloads
 manuserver site_dev     # run the website here instead, no VM involved
 ```
+
+`admin` there is the name you gave the *server*. Leave it out and these use
+your name on this computer, which is a different account and has no password
+that will work. Every password they ask for is the server's — its `ssh` login
+first, then `sudo` — asked down the connection into your own terminal.
 
 `./manuserver.sh --help` lists the rest.
 
