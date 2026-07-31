@@ -116,7 +116,7 @@ That is all. There is no window and no login. The server starts on its own.
 | Stop the server | `manuserver stop` |
 | Check if it is running | `manuserver status` |
 | Open a terminal on it | `manuserver ssh yourname` |
-| Put it on the internet | `manuserver tunnel` |
+| Put it on the internet | `manuserver tunnel yourname` |
 | Save a copy of the database | `manuserver backup` |
 | Put a saved copy back | `manuserver restore` |
 | Watch it start up in a window | `manuserver console` |
@@ -332,18 +332,53 @@ Cloudflare's nameservers before any of the rest works.
    **Create Tunnel**.
 5. It offers you an install command for your operating system. You do not run
    it — the long string starting `eyJhIjoi` inside it is the token, and that is
-   all you need. Copy it, and treat it like a password.
+   all you need. Copy it, and treat it like a password. Copying the whole
+   command is fine as well; the prompt takes the token out of it.
 
 ### 3. Turn it on
 
-```sh
-manuserver tunnel        # virtual machine
-sudo manuserver-tunnel   # real server, over ssh
-```
+There is one command that asks for the token, and it runs **on the server**.
+Which of these you type is decided by where you are sitting, not by what you
+want to happen:
+
+| Where you are | What to type |
+| --- | --- |
+| At your own computer, server in the virtual machine | `manuserver tunnel yourname` |
+| At your own computer, server is a real machine elsewhere | `ssh yourname@the-server` first, then the line below |
+| At the server's own keyboard, or in that ssh session | `sudo manuserver-tunnel` |
+
+`yourname` is the username you chose during the install, **on the server**. If
+you leave it out, `manuserver tunnel` uses your name on this computer, which is
+usually a different account — see below.
 
 Paste the token at the prompt — nothing appears as you paste, which is
 deliberate. It tells you within a few seconds whether the tunnel came up. On a
 real server, its address is on its own screen, next to **on this network**.
+
+Afterwards, `manuserver tunnel status yourname` and
+`manuserver tunnel off yourname` — the username goes last, after the word.
+
+#### If it asks for a password and refuses every one you try
+
+Both passwords it could be asking for are the **server's**, asked down the
+connection and typed into your terminal. Neither is this computer's login. In
+order:
+
+- **The first prompt is the server's ssh login.** If it will not take your
+  password — the right one, typed carefully — the account is almost certainly
+  not there. `manuserver tunnel` with no name asks to log in as *your name on
+  this computer*, and the documents deliberately tell you to choose a different
+  one for the server, so on most installs that account does not exist and no
+  password can be correct. Give the server's name: `manuserver tunnel yourname`.
+  Check a name works with `manuserver ssh yourname`, which fails the same way
+  for the same reason.
+- **The second prompt is `sudo`, on the server, after you are already logged
+  in.** Same password as the one you just used to get in. Nothing on screen
+  distinguishes it from the first, which is the whole reason this is confusing.
+- Neither prompt shows anything as you type. That is normal for both.
+
+If you set up a key with `ssh-copy-id`, the first prompt disappears and only
+the `sudo` one is left.
 
 **"Healthy" in Cloudflare's dashboard does not mean the site is reachable.** It
 means `cloudflared` connected to Cloudflare and nothing more. A tunnel has no

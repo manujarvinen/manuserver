@@ -481,6 +481,11 @@ cmd_ssh() {
 # The token goes straight from your clipboard into the prompt on the server.
 # This script never receives it, never passes it as an argument, and cannot
 # leave it in the host's shell history or process list.
+#
+# Every prompt this produces comes from the *server*, asked down an ssh
+# connection into your terminal, and there is nothing on screen to say so —
+# which is why the wrong password is the usual first result. See the note on
+# announce_remote_login below.
 cmd_tunnel() {
   vm_running || die "not running — start it with: $SELF vm_start"
 
@@ -496,7 +501,36 @@ cmd_tunnel() {
   mapfile -t opts < <(ssh_opts)
   opts+=(-t)
 
-  exec ssh "${opts[@]}" "$user@localhost" "sudo manuserver-tunnel $action"
+  announce_remote_login "$user" "$action"
+
+  # Not exec: ssh exiting 255 means the connection itself failed, and the one
+  # reason it usually failed is worth naming rather than leaving as
+  # "Permission denied (publickey,password)".
+  ssh "${opts[@]}" "$user@localhost" "sudo manuserver-tunnel $action" && return
+
+  local status=$?
+  ((status == 255)) || return "$status"
+
+  die "could not log in to the server as '$user'.
+     The name this asks for is the one you chose during the install, on the
+     server — not your name on this computer. If they are different, say which:
+       $SELF tunnel $action yourname
+     A shell is the quickest way to check a name works: $SELF ssh yourname"
+}
+
+# The passwords this command asks for are not this computer's.
+#
+# `tunnel` defaults to $USER because nothing here remembers what the server
+# calls you, and on a VM installed with a different username that default is
+# simply a user that does not exist — so no password is ever going to be
+# accepted, including the right one for this machine. Then, once logged in,
+# sudo asks again, still in your terminal, still for the server's password.
+# Two prompts, neither of them local, neither of them labelled.
+announce_remote_login() {
+  local user=$1 action=$2
+  say "connecting to the server as '$user' to run: sudo manuserver-tunnel $action"
+  printf '  Any password asked for from here on is the one you set up on the\n'
+  printf "  server during the install, for '%s' — not this computer's.\n\n" "$user"
 }
 
 # vm_run <tty|notty> <user> <command...>

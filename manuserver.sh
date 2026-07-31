@@ -9,7 +9,7 @@
 #   ./manuserver.sh status           is it up, and on which ports
 #   ./manuserver.sh console          boot it in a window, to watch it boot
 #   ./manuserver.sh ssh [user]       open a shell on it
-#   ./manuserver.sh tunnel [on|off|status]   put the site on the internet
+#   ./manuserver.sh tunnel [on|off|status] [user]   put the site on the internet
 #   ./manuserver.sh backup [user]    save the database to ~/Downloads
 #   ./manuserver.sh restore [file|user]   put a saved database back
 #   ./manuserver.sh site_dev         run the website here, without the VM
@@ -18,6 +18,13 @@
 #   ./manuserver.sh install_command  put `manuserver` on your PATH
 #
 # With no argument it starts the server, because that is the thing you do most.
+#
+# The [user] that ssh, tunnel, backup and restore take is the username on the
+# *server*, chosen during the install. It defaults to your name on this
+# computer, because nothing here remembers the other one. If the two differ,
+# pass it — otherwise you are asked for the password of an account that does
+# not exist, and no password works. Any password prompt these four produce
+# comes from the server, down the connection, not from this machine.
 #
 # start, stop, status and console are also spelled vm_start, vm_stop, vm_status
 # and vm_console; both work. vm_install has no short form on purpose — it
