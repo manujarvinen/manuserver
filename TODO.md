@@ -1,16 +1,46 @@
 # What is still unfinished
 
-Written 2026-07-30, after the first end-to-end run. **tastehopping.com is live**
-— the VM serves it through a Cloudflare tunnel, on the apex and on `www`, with
-a valid certificate. Everything below is what has *not* been done or *not* been
-tested.
+## 0. Where this stands, 2026-07-31
+
+**The development machine was wiped, and there is no server any more.** This
+is the wipe §2 planned for, and it did not go the way the plan describes. The
+bare-metal install of *this* repo failed on the disk (see *Bare metal*, §2),
+and rather than stay down, the machine was reinstalled with something else —
+`github.com/gearnoodle/archlab` — at 03:01. So the target hardware is now in
+use by another system, and the bare-metal test is blocked on freeing it again
+or finding a second machine.
+
+What that wipe took with it, all of it expected and none of it recoverable
+from this checkout:
+
+- **The VM, and the live server on it.** `~/.local/share/manuserver` is gone.
+  tastehopping.com has no origin.
+- **The `manuserver` command.** No `~/.local/bin/manuserver`; this is a fresh
+  clone, so there is nothing on PATH until `install_command` runs.
+- **The Cloudflare tunnel token**, exactly as §2 said it would: it only ever
+  lived on the server. Take a new one from the dashboard.
+- **Any backup that was on this disk.** `~/Downloads` is empty. Whether a
+  database copy left the machine first is the one open question here, and the
+  answer is not in the repo.
+
+**The offline Worker covered it, unprompted.** tastehopping.com currently
+answers with `<title>tastehopping — back shortly</title>` rather than a
+Cloudflare 1033. That is the first *real* outage it has taken — not a planned
+maintenance window, and not one anybody set up to watch it — which was one of
+the two things §2 listed as still unseen. It works.
+
+Getting back to a running server, from this clone, is the sequence in
+[INSTALL.md](INSTALL.md): `build_iso`, `vm_install`, then a fresh tunnel
+token. Rebuilding the ISO is not optional this time — the disk fix in §2 is
+baked into the medium.
 
 ## 1. Nothing outstanding here
 
-Everything in this section is done, and so is the clean-room install and the
-offline Worker in §2. **The only untested thing left in the whole repo is an
-install onto a physical machine** — and that is the one thing a VM cannot
-stand in for.
+Everything in this section was done on 2026-07-30, on the server that no
+longer exists. It is kept because it is what a rebuilt one should look like.
+**The one thing left is an install onto a physical machine** — the one thing a
+VM cannot stand in for. It has now been attempted, it failed on the disk, and
+the cause is fixed but unproven; see *Bare metal* in §2.
 
 ### Done, 2026-07-30
 
@@ -99,16 +129,71 @@ The `hostname` binary is not installed on the built machine — nothing in this
 repo calls it, `/etc/hostname` is set, and the prompt proves it. Noted only so
 nobody reads its absence as a fault.
 
-**Bare metal.** No install onto a physical machine has happened. The USB
-instructions (Caligula) and the *Running it in 64-bit PC* sections of both
-documents are written from the code, not from having done it. The `ssh` and
-`sudo -u postgres` commands there are the same ones the VM path runs remotely,
-so they should hold, but nobody has checked.
+**Bare metal, attempted 2026-07-31. It got as far as the disk and stopped
+there.** The target's disk carried an ordinary Arch install with a btrfs root
+— the same setup as the development machine. Two runs, two failures, both on
+the same cause:
 
-The clean-room run narrows what is left here. The installer, `provision.sh`,
-`db-setup.sh` and first boot are all now proven on a machine built from
-nothing; what bare metal adds is real firmware, a real disk and real wifi —
-the parts a VM cannot stand in for.
+1. `wipefs: /dev/nvme0n1: probing initialization failed: Device or resource
+   busy`, reported under *clearing filesystem signatures*.
+2. On the second run, `/dev/nvme0n1p2 is apparently in use by the system; will
+   not make a filesystem here!`, under *formatting root*.
+
+**The cause was btrfs, not LVM.** btrfs-progs ships a udev rule that runs
+`btrfs device scan` on every device carrying a btrfs signature, and the live
+medium runs it on the target disk during boot. A registered device is held by
+the kernel module, so it refuses the exclusive open that `wipefs` and `mkfs`
+both need. Nothing is mounted, nothing appears in `lsblk`'s tree, and
+`/sys/class/block/*/holders` is empty — the disk simply will not be written
+to. Opening a whole disk exclusively also fails when one partition is held,
+which is why the first message names `/dev/nvme0n1` for a problem one level
+down.
+
+This is worth being clear about because the obvious diagnosis is wrong. The
+recovery that worked at the time ran `dmsetup remove ArchinstallVg-root`
+first, and that command did nothing: the machine has no LVM, no `lvm2`
+installed and an empty `/dev/mapper`. What actually cleared the disk were the
+`wipefs -a` and `sgdisk --zap-all` that followed, by which point the failed
+run had already destroyed enough state to release it.
+
+**The order of operations made the first failure destructive.**
+`disk_partition` ran `sgdisk --zap-all` *before* `wipefs`, so the partition
+table was gone by the time the step that actually fails on a busy disk
+reported it. The disk lost its contents and gained no install. That order is
+now reversed: `wipefs` is the first thing that touches the disk, so a disk
+this installer cannot have is a disk it has not modified.
+
+**Fixed but not yet proven.** `disk_release` in
+`files/iso/overlay/root/lib/disk.sh` now unmounts and `swapoff`s everything on
+the target, deactivates volume groups with `vgchange`, stops leftover md
+arrays and dm mappings, and hands every btrfs member back with `btrfs device
+scan --forget`. `files/lib/iso.sh` puts `btrfs-progs`, `lvm2` and `mdadm` on
+the medium so those tools exist. **None of it reaches an install until the ISO
+is rebuilt** — `disk.sh` is baked into the medium, so pushing alone does
+nothing, and `iso.sh` is host-side and needs `install_command`.
+
+**What the attempt did prove:** `disk_part_suffix` gets NVMe right. Both
+failures name `/dev/nvme0n1p2`, which is the `p` branch that had never once
+run and was the most likely thing to break. The error path also works — both
+failures came back through `ui_fatal_log` with the real cause in the tail of
+the log, on screen, rather than as a hang or a stack trace.
+
+**Also found, while testing the helpers against real hardware:** `lsblk`
+reports `/dev/zram0` as `type == disk`, so `disk_candidates` was offering a
+compressed-RAM swap device in the disk menu next to the real one. Picking it
+would waste an install on something that does not survive a reboot. Now
+filtered along with `ram*`, `loop*` and `fd*`.
+
+**The attempt was abandoned rather than retried.** After the manual wipe the
+machine was given a different system entirely, to get something running that
+evening. That is the honest reason bare metal is still open, and it is a fair
+one: an installer that eats a disk and installs nothing is not something to
+spend a third attempt on at five in the morning.
+
+Still untested on bare metal: everything after the disk. The USB instructions
+(Caligula) and the *Running it in 64-bit PC* sections of both documents are
+written from the code, not from having done it. Wifi has still never run —
+every install so far used the cable path.
 
 ### The plan: wipe this machine and install onto it
 
@@ -141,16 +226,16 @@ the resting-machine page rather than a Cloudflare error.
 **What this actually tests**, in rough order of how likely it is to be the
 thing that breaks:
 
-- **`disk_part_suffix` on NVMe** (`files/iso/overlay/root/lib/disk.sh`). It
-  branches on the device name: `sd*`/`vd*` give `vda1`, while `nvme*`/`mmcblk*`
-  need a `p` — `nvme0n1p1`. Every install so far has been `/dev/vda`, so the
-  `p` branch has never once run. A mini PC is almost certainly NVMe. Wrong here
-  means `mkfs` failing several steps later on a path that does not exist.
+- **~~`disk_part_suffix` on NVMe~~ — confirmed working, 2026-07-31.** The `p`
+  branch produced `/dev/nvme0n1p2` correctly on the attempt above.
+- **Whether the disk actually lets go.** This is what replaced the item above
+  as the likely thing to break, and it already has once. See *Bare metal*.
 - **The disk menu, with a footgun.** One disk is shown rather than asked about;
   with the USB stick attached there are two, so the menu runs for the first
   time. `disk_candidates` filters on `type == disk`, and **a USB stick is type
   disk** — the stick you booted from appears in the list. Pick by the size and
-  model that `disk_describe` prints, never by position.
+  model that `disk_describe` prints, never by position. `zram0` used to show up
+  here too and no longer does.
 - **Wifi.** `iw`/`iwd` scanning has never run; every install used the cable
   path. Use ethernet for the first attempt so a disk problem and a wifi problem
   cannot be mistaken for each other, then test wifi on a second run.
@@ -182,8 +267,9 @@ a page that says the machine is resting, which is what it always should have
 looked like. The clean-room install earlier the same day took the site down
 with nothing in front of it; the next one will not.
 
-Two things it still has not seen: a *real* outage nobody planned, and a
-Cloudflare-side failure rather than an origin-side one.
+**One of those has now happened.** The wipe in §0 took the origin away for
+good with nobody watching, and the Worker answered — see §0. What it still has
+not seen is a Cloudflare-side failure rather than an origin-side one.
 
 **It is code in front of a working system.** If the site ever misbehaves in a
 way the server cannot explain, remove the route before looking anywhere else.

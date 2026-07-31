@@ -82,7 +82,16 @@ cmd_build_iso() {
   # kbd matters more than it looks: the installer uses psfgettable to find out
   # which glyphs the console font actually has, and setfont to switch to one
   # that can draw the logo.
-  for pkg in iwd iw curl gptfdisk dosfstools e2fsprogs arch-install-scripts git kbd; do
+  #
+  # btrfs-progs, lvm2 and mdadm are not here to build anything. They are how
+  # disk_release lets go of what a *previous* install left on the target disk.
+  # The live medium claims what it finds — a volume group gets activated, and
+  # a btrfs member gets registered with the kernel by udev — and a claimed disk
+  # refuses the exclusive open that wipefs and mkfs need. btrfs-progs is the
+  # one that matters most: a plain Arch install with a btrfs root is the
+  # ordinary thing to find on real hardware, and without `btrfs device scan
+  # --forget` the installer cannot clear it.
+  for pkg in iwd iw curl gptfdisk dosfstools e2fsprogs btrfs-progs arch-install-scripts git kbd lvm2 mdadm; do
     grep -qxF "$pkg" "$profile/packages.x86_64" || printf '%s\n' "$pkg" >>"$profile/packages.x86_64"
   done
 
