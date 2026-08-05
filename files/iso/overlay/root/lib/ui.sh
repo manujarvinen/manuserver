@@ -294,10 +294,33 @@ ui_fatal() {
 # useful than whatever scrolled past.
 UI_LOG=/tmp/manuserver-install.log
 
+# A long step with nothing on screen for minutes at a time -- pacstrap alone
+# runs 4-6 -- reads as hung rather than working. A spinner on the row right
+# under the step label says otherwise. It goes directly under the label,
+# not at the far edge of the screen, on purpose: a lone character 70 columns
+# away from the text it belongs to is easy to miss entirely. That row is
+# UI_ROW's current value -- the next free row, whatever it ended up being
+# after ui_step's own redraw-on-overflow -- so this works whether or not
+# that just fired, and is cleared back to blank before returning, which is
+# the state that row was already going to be in.
 ui_run() {
   local label=$1; shift
   ui_step "$label"
-  if ! "$@" >>"$UI_LOG" 2>&1; then
+
+  local row=$UI_ROW
+  "$@" >>"$UI_LOG" 2>&1 &
+  local pid=$! spin='|/-\' i=0
+
+  while kill -0 "$pid" 2>/dev/null; do
+    ui_at "$row" "$UI_PAD"
+    printf '%s%s still working%s' "$S_HINT" "${spin:i%4:1}" "$S_RESET"
+    i=$((i + 1))
+    sleep 0.4
+  done
+  ui_at "$row" "$UI_PAD"
+  ui_clear_line
+
+  if ! wait "$pid"; then
     ui_fatal_log "$label"
   fi
 }
