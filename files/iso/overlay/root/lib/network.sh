@@ -130,7 +130,7 @@ NET_SSID=''
 NET_PSK=''
 
 net_wifi_connect() {
-  local iface=$1
+  local iface=$1 intro=${2:-"No wired connection. Scanning for networks..."}
   local -a ssids=() labels=()
   local sig ssid pass
 
@@ -139,7 +139,7 @@ net_wifi_connect() {
   sleep 1
 
   ui_screen
-  ui_body "No wired connection. Scanning for networks..."
+  ui_body "$intro"
   ui_blank
 
   while IFS=$'\t' read -r sig ssid; do
@@ -212,7 +212,7 @@ net_offer_wifi_backup() {
   ui_confirm "Yes, set up wifi" "No, wired is enough" || return 0
 
   ip link set "$wired" down 2>/dev/null || true
-  net_wifi_connect "$iface"
+  net_wifi_connect "$iface" "Scanning for networks..."
   ip link set "$wired" up 2>/dev/null || true
   net_wait_online || true
 }
