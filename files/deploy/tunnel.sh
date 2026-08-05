@@ -125,7 +125,13 @@ INTRO
   # -s so a token does not end up on screen, in a scrollback buffer, or in a
   # screenshot. It never reaches the command line either, so it stays out of
   # shell history and out of `ps`.
-  read -rsp '  token: ' raw
+  #
+  # `|| true`: read still fills raw correctly when input ends without a
+  # trailing newline, but returns non-zero anyway because that counts as EOF
+  # mid-read. A token file someone typed by hand often has no final newline,
+  # and set -e turns that into this script exiting right here with no output
+  # at all -- which looks exactly like the command silently doing nothing.
+  read -rsp '  token: ' raw || true
   printf '\n\n'
 
   token=$(extract_token "$raw")
