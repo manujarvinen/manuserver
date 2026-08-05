@@ -237,8 +237,44 @@ spend a third attempt on at five in the morning.
 
 Still untested on bare metal: everything after the disk. The USB instructions
 (Caligula) and the *Running it in 64-bit PC* sections of both documents are
-written from the code, not from having done it. Wifi has still never run —
-every install so far used the cable path.
+written from the code, not from having done it. Wifi had never run before
+2026-08-05 — every earlier install used the cable path; see below.
+
+**Wifi has now run, 2026-08-05, on a separate machine from the plan below — an
+old laptop, not `arch`.** The install used the wired path and, for the first
+time, accepted the new offer (see next paragraph) to also save wifi
+credentials for later. On first boot the credentials worked —
+`iwctl station wlan0 show` reported `State: connected` to the real SSID — but
+the machine still had no route out: `ping 8.8.8.8` returned "Network is
+unreachable" and `networkctl status wlan0` reported `(unmanaged)`.
+
+**The cause was a umask leak, not the wifi code itself.** `net_persist_psk`
+(`files/iso/overlay/root/lib/network.sh`) set `umask 077` to keep the
+passphrase file it writes from being briefly world-readable, and never
+restored it. umask is process-wide, not scoped to the function, so it was
+still in effect for `install_configure`'s `arch-chroot` invocation right
+after — silently taking every file that step writes (`/etc/hostname`,
+`/etc/hosts`, both `.network` files) down to mode `600`. `systemd-networkd`
+runs as the unprivileged `systemd-network` user, not root, so it could not
+read its own `.network` files and treated `wlan0` as unmatched, which looks
+exactly like a config that never mattered — until wifi is the only interface.
+Confirmed live with `chmod 644 /etc/systemd/network/*.network && systemctl
+restart systemd-networkd`, which brought the interface up immediately. Fixed
+at the source by saving and restoring the umask around the one write that
+needs it.
+
+**Not yet reproduced end to end.** The fix has not been proven by a fresh
+`build_iso` → install → first-boot cycle, only by patching the symptom on the
+machine that already hit it. The next bare-metal attempt is the real test.
+
+**The wired-only install also got a new step out of this.** `net_setup` used
+to return the moment a wired connection was online and never touch the wifi
+code at all, so a machine installed over ethernet came up with zero saved
+networks — no way to run it on wifi later without configuring `iwd` by hand.
+`net_offer_wifi_backup` now asks, when a wireless card is present, whether to
+also save credentials for later, and actually verifies them by dropping the
+wired link for the length of the test rather than just taking the passphrase
+on faith.
 
 ### The plan: wipe this machine and install onto it
 
@@ -281,9 +317,10 @@ thing that breaks:
   disk** — the stick you booted from appears in the list. Pick by the size and
   model that `disk_describe` prints, never by position. `zram0` used to show up
   here too and no longer does.
-- **Wifi.** `iw`/`iwd` scanning has never run; every install used the cable
-  path. Use ethernet for the first attempt so a disk problem and a wifi problem
-  cannot be mistaken for each other, then test wifi on a second run.
+- **Wifi.** Untested on *this* machine, though it has now run on another — see
+  the umask-leak fix above. Use ethernet for the first attempt so a disk
+  problem and a wifi problem cannot be mistaken for each other, then test wifi
+  on a second run.
 - **`linux-firmware` mattering.** Installed all along, irrelevant in a VM.
 - **Firmware settings.** UEFI on, Secure Boot off. The installer refuses BIOS
   outright rather than installing something that will not boot.

@@ -5,8 +5,10 @@
 # back up on its own.
 #
 # Nothing below is exercised by the QEMU test loop except the wired path;
-# there is no virtual wireless device. The wired path therefore never calls
-# into the wifi code, and the wifi code is the last thing to touch.
+# there is no virtual wireless device. On real hardware the wired path can
+# still reach the wifi code, through net_offer_wifi_backup, but QEMU has
+# nothing for net_wireless_iface to find, so even that stays untested here.
+# The wifi code is the last thing to touch.
 
 readonly NET_PROBE_URL="https://archlinux.org/"
 readonly NET_DHCP_TIMEOUT=20
@@ -101,13 +103,23 @@ net_iwd_filename() {
 }
 
 # Persist credentials into the *target* system so it rejoins on first boot.
+#
+# umask is process-wide, not scoped to this function -- left at 077, it would
+# still be in effect for install_configure's arch-chroot invocation right
+# after this, silently taking /etc/hostname, /etc/hosts and both .network
+# files down to mode 600. systemd-networkd runs as the unmanaged system user
+# systemd-network, not root, and can't read a 600 root:root .network file --
+# it just treats the interface as unmatched, which looks identical to a
+# config that never mattered, right up until wifi is the only interface.
 net_persist_psk() {
   local root=$1 ssid=$2 pass=$3
-  local dir="$root/var/lib/iwd" file
+  local dir="$root/var/lib/iwd" file old_umask
   install -d -m 700 "$dir"
   file="$dir/$(net_iwd_filename "$ssid")"
+  old_umask=$(umask)
   umask 077
   printf '[Security]\nPassphrase=%s\n' "$pass" >"$file"
+  umask "$old_umask"
   chmod 600 "$file"
 }
 
@@ -182,6 +194,29 @@ net_wifi_connect() {
 
 # --- entry point -----------------------------------------------------------
 
+# A wired install has no reason to ask about wifi -- until the machine is the
+# kind that gets carried somewhere without a cable. If there's a wireless
+# card too, offer to save its credentials, verified for real rather than
+# just typed in and hoped for: drop the wired link for the length of the
+# test so the online check in net_wifi_connect reflects wireless, not the
+# connection already in hand.
+net_offer_wifi_backup() {
+  local wired=$1 iface
+
+  iface=$(net_wireless_iface) || return 0
+
+  ui_screen
+  ui_body "This machine also has a wireless card."
+  ui_body "Save wifi credentials too, in case it isn't wired later?"
+  ui_blank
+  ui_confirm "Yes, set up wifi" "No, wired is enough" || return 0
+
+  ip link set "$wired" down 2>/dev/null || true
+  net_wifi_connect "$iface"
+  ip link set "$wired" up 2>/dev/null || true
+  net_wait_online || true
+}
+
 # Bring the live environment online. Asks nothing when it doesn't have to.
 net_setup() {
   local iface
@@ -195,6 +230,7 @@ net_setup() {
     if net_wait_online; then
       ui_body "Online."
       sleep 1
+      net_offer_wifi_backup "$iface"
       return 0
     fi
     ui_body "$iface has a link but no route out. Falling back to wireless..."
